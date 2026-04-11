@@ -1,36 +1,48 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import type { GameState } from "./types";
+import type { GamePhase } from "./types";
 import { CLUES } from "./types";
+
+export interface RoomStatus {
+  memberCount: number;
+  members: { studentName: string; panelIndex: number; submitted: boolean }[];
+  allJoined: boolean;
+  allSubmitted: boolean;
+  panelScores: (number | null)[];
+  verdict: string | null;
+}
+
+interface GameState {
+  phase: GamePhase;
+  roomId: string;
+  panelIndex: number;
+  studentName: string;
+  codeName: string;
+  icon: string;
+  panelSelections: (("A" | "B" | "C") | null)[];
+  score: number;
+}
 
 interface GameContextValue {
   state: GameState;
-  goToSetup: () => void;
-  setSquadName: (name: string) => void;
-  setDetective: (index: number, name: string) => void;
-  startGame: () => void;
-  selectAnswer: (panelIndex: number, questionIndex: number, key: "A" | "B" | "C") => void;
-  submitPanel: () => void;
-  setFinalVerdict: (verdict: string) => void;
-  submitVerdict: () => void;
+  goToJoin: () => void;
+  joinRoom: (codeName: string, icon: string, studentName: string) => Promise<string | null>;
+  setPhase: (phase: GamePhase) => void;
+  selectAnswer: (questionIndex: number, key: "A" | "B" | "C") => void;
+  submitPanel: () => Promise<void>;
+  submitVerdict: (verdict: string) => Promise<void>;
+  fetchRoomStatus: () => Promise<RoomStatus | null>;
   resetGame: () => void;
 }
 
-const makeEmptySelections = () =>
-  CLUES.map((c) => c.questions.map(() => null as ("A" | "B" | "C") | null));
-
 const initialState: GameState = {
   phase: "title",
-  squadName: "",
-  detectives: [
-    { name: "", index: 0 },
-    { name: "", index: 1 },
-    { name: "", index: 2 },
-    { name: "", index: 3 },
-  ],
-  currentPanel: 0,
-  panelSelections: makeEmptySelections(),
-  panelScores: [0, 0, 0, 0],
-  finalVerdict: "",
+  roomId: "",
+  panelIndex: 0,
+  studentName: "",
+  codeName: "",
+  icon: "",
+  panelSelections: CLUES[0].questions.map(() => null),
+  score: 0,
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -38,67 +50,77 @@ const GameContext = createContext<GameContextValue | null>(null);
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
 
-  const goToSetup = () => setState((s) => ({ ...s, phase: "setup" }));
+  const goToJoin = () => setState((s) => ({ ...s, phase: "join" }));
 
-  const setSquadName = (name: string) => setState((s) => ({ ...s, squadName: name }));
+  const setPhase = (phase: GamePhase) => setState((s) => ({ ...s, phase }));
 
-  const setDetective = (index: number, name: string) =>
-    setState((s) => {
-      const detectives = [...s.detectives];
-      detectives[index] = { ...detectives[index], name };
-      return { ...s, detectives };
+  const joinRoom = async (codeName: string, icon: string, studentName: string): Promise<string | null> => {
+    const res = await fetch("/api/rooms/join", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codeName, icon, studentName }),
     });
+    const data = await res.json();
+    if (!res.ok) return data.error ?? "Failed to join room";
+    const { roomId, panelIndex } = data as { roomId: string; panelIndex: number };
+    setState((s) => ({
+      ...s,
+      roomId,
+      panelIndex,
+      studentName,
+      codeName,
+      icon,
+      panelSelections: CLUES[panelIndex].questions.map(() => null),
+      phase: "waiting_join",
+    }));
+    return null;
+  };
 
-  const startGame = () =>
-    setState((s) => ({ ...s, phase: "individual", currentPanel: 0 }));
-
-  const selectAnswer = (panelIndex: number, questionIndex: number, key: "A" | "B" | "C") => {
+  const selectAnswer = (questionIndex: number, key: "A" | "B" | "C") => {
     setState((s) => {
-      const panelSelections = s.panelSelections.map((p) => [...p]);
-      panelSelections[panelIndex] = [...panelSelections[panelIndex]];
-      panelSelections[panelIndex][questionIndex] = key;
+      const panelSelections = [...s.panelSelections];
+      panelSelections[questionIndex] = key;
       return { ...s, panelSelections };
     });
   };
 
-  const submitPanel = () => {
-    setState((s) => {
-      const clue = CLUES[s.currentPanel];
-      const selections = s.panelSelections[s.currentPanel];
-      const score = clue.questions.reduce((acc, q, i) => {
-        return acc + (selections[i] === q.ans ? 1 : 0);
-      }, 0);
-      const panelScores = [...s.panelScores];
-      panelScores[s.currentPanel] = score;
-      const nextPanel = s.currentPanel + 1;
-      if (nextPanel >= CLUES.length) {
-        return { ...s, panelScores, phase: "collaboration" };
-      }
-      return { ...s, panelScores, currentPanel: nextPanel };
+  const submitPanel = async () => {
+    const clue = CLUES[state.panelIndex];
+    const score = clue.questions.reduce((acc, q, i) => {
+      return acc + (state.panelSelections[i] === q.ans ? 1 : 0);
+    }, 0);
+    await fetch(`/api/rooms/${encodeURIComponent(state.roomId)}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ panelIndex: state.panelIndex, score, answers: state.panelSelections }),
     });
+    setState((s) => ({ ...s, score, phase: "waiting_submit" }));
   };
 
-  const setFinalVerdict = (verdict: string) =>
-    setState((s) => ({ ...s, finalVerdict: verdict }));
+  const submitVerdict = async (verdict: string) => {
+    await fetch(`/api/rooms/${encodeURIComponent(state.roomId)}/verdict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verdict }),
+    });
+    setState((s) => ({ ...s, phase: "ending" }));
+  };
 
-  const submitVerdict = () => setState((s) => ({ ...s, phase: "ending" }));
+  const fetchRoomStatus = async (): Promise<RoomStatus | null> => {
+    try {
+      const res = await fetch(`/api/rooms/${encodeURIComponent(state.roomId)}/status`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  };
 
   const resetGame = () => setState(initialState);
 
   return (
     <GameContext.Provider
-      value={{
-        state,
-        goToSetup,
-        setSquadName,
-        setDetective,
-        startGame,
-        selectAnswer,
-        submitPanel,
-        setFinalVerdict,
-        submitVerdict,
-        resetGame,
-      }}
+      value={{ state, goToJoin, joinRoom, setPhase, selectAnswer, submitPanel, submitVerdict, fetchRoomStatus, resetGame }}
     >
       {children}
     </GameContext.Provider>

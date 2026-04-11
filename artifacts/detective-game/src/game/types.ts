@@ -1,14 +1,11 @@
 export type GamePhase =
   | "title"
-  | "setup"
+  | "join"
+  | "waiting_join"
   | "individual"
+  | "waiting_submit"
   | "collaboration"
   | "ending";
-
-export interface Detective {
-  name: string;
-  index: number;
-}
 
 export interface MCQuestion {
   q: string;
@@ -29,15 +26,7 @@ export interface Clue {
   icon: string;
 }
 
-export interface GameState {
-  phase: GamePhase;
-  squadName: string;
-  detectives: Detective[];
-  currentPanel: number;
-  panelSelections: (("A" | "B" | "C") | null)[][];
-  panelScores: number[];
-  finalVerdict: string;
-}
+export const TEAM_ICONS = ["🔍", "⚡", "🎯", "🦊", "🐉", "🦁", "🌟", "🔥"];
 
 export const CLUES: Clue[] = [
   {
