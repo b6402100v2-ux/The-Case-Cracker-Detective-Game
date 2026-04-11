@@ -22,94 +22,101 @@ export default function TitleScreen({ onStart }: TitleScreenProps) {
 
   return (
     <div className="min-h-screen halftone-bg flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decorative panels */}
-      <div className="absolute top-4 left-4 w-32 h-20 comic-panel opacity-20 bg-accent/10" />
-      <div className="absolute top-4 right-4 w-24 h-28 comic-panel-pink opacity-20" />
-      <div className="absolute bottom-8 left-8 w-28 h-16 comic-panel-cyan opacity-20" />
-      <div className="absolute bottom-4 right-6 w-20 h-24 comic-panel-yellow opacity-20" />
+      {/* Top color bar like the reference image */}
+      <div className="fixed top-0 left-0 right-0 flex h-3 z-50">
+        <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
+        <div className="flex-1" style={{ background: "hsl(210 80% 40%)" }} />
+        <div className="flex-1" style={{ background: "hsl(48 100% 50%)" }} />
+        <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
+      </div>
 
       {/* Main title panel */}
       <div
-        className={`comic-panel bg-card max-w-2xl w-full p-0 overflow-hidden transition-all duration-700 ${
+        className={`comic-panel bg-card max-w-lg w-full overflow-hidden transition-all duration-700 ${
           visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
-        {/* Yellow header bar */}
-        <div className="bg-primary px-6 py-3 border-b-4 border-foreground">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-primary-foreground tracking-widest">CASE #101</span>
-            <span className="text-xs font-mono font-bold text-primary-foreground tracking-widest">TOP SECRET</span>
-          </div>
+        {/* Top header bar */}
+        <div className="px-5 py-2 border-b-4 border-foreground flex items-center justify-between" style={{ background: "hsl(48 100% 50%)" }}>
+          <span className="text-xs font-mono font-black text-foreground tracking-widest">CASE #101</span>
+          <span className="text-xs font-mono font-black text-foreground tracking-widest">A COLLABORATIVE READING MYSTERY</span>
         </div>
 
-        <div className="p-8 text-center">
-          {/* Agency logo */}
-          <div className="mb-2">
-            <span className="text-accent text-sm tracking-[0.3em] font-mono uppercase">
-              ★ Presents ★
-            </span>
+        <div className="p-6 text-center bg-card">
+          {/* Squad badge area */}
+          <div className="mb-4">
+            <div className="inline-block px-5 py-2 skew-heading border-4 border-foreground" style={{ background: "hsl(48 100% 50%)" }}>
+              <span className="text-base font-black tracking-[0.2em] text-foreground uppercase">
+                YOUTH DETECTIVE AGENCY
+              </span>
+            </div>
           </div>
 
-          {/* Main Title */}
+          {/* Case subtitle */}
+          <p className="font-mono text-xs text-muted-foreground tracking-widest mb-2 uppercase">
+            Case #101 — The Silent Notification
+          </p>
+
+          {/* Main title — alternating red and blue like reference */}
           <h1
-            className="text-6xl md:text-7xl font-black tracking-tight leading-none mb-1 flicker"
+            className="text-6xl md:text-7xl font-black leading-none mb-0 flicker"
             style={{
-              color: "hsl(45 100% 55%)",
-              textShadow: "4px 4px 0px hsl(310 80% 40%), 8px 8px 0px rgba(0,0,0,0.4)",
+              color: "hsl(354 78% 44%)",
+              textShadow: "3px 3px 0px hsl(354 60% 25%)",
               fontFamily: "'Bangers', cursive",
-              letterSpacing: "0.05em",
+              letterSpacing: "0.04em",
             }}
           >
-            YOUTH
+            THE SILENT
           </h1>
           <h1
-            className="text-6xl md:text-7xl font-black tracking-tight leading-none mb-1"
+            className="text-6xl md:text-7xl font-black leading-none mb-5"
             style={{
-              color: "hsl(195 100% 55%)",
-              textShadow: "4px 4px 0px hsl(195 60% 25%), 8px 8px 0px rgba(0,0,0,0.4)",
+              color: "hsl(210 80% 40%)",
+              textShadow: "3px 3px 0px hsl(210 60% 20%)",
               fontFamily: "'Bangers', cursive",
-              letterSpacing: "0.05em",
+              letterSpacing: "0.04em",
             }}
           >
-            DETECTIVE
-          </h1>
-          <h1
-            className="text-6xl md:text-7xl font-black tracking-tight leading-none mb-6"
-            style={{
-              color: "hsl(310 80% 65%)",
-              textShadow: "4px 4px 0px hsl(310 60% 30%), 8px 8px 0px rgba(0,0,0,0.4)",
-              fontFamily: "'Bangers', cursive",
-              letterSpacing: "0.05em",
-            }}
-          >
-            AGENCY
+            NOTIFICATION
           </h1>
 
-          {/* Subtitle */}
-          <div className="comic-panel-yellow inline-block px-4 py-2 mb-8 skew-heading">
-            <p className="text-foreground text-lg tracking-widest font-mono font-bold">
-              CASE #101: THE SILENT NOTIFICATION
+          {/* Narration box — yellow background like reference */}
+          <div className="border-4 border-foreground p-4 mb-6 text-left" style={{ background: "hsl(48 100% 50%)" }}>
+            <p className="font-mono text-sm leading-relaxed text-foreground font-bold italic">
+              A girl named Maya is in critical condition. The digital evidence
+              is fragmented. Split up. Find the truth. <strong>Together.</strong>
             </p>
           </div>
 
-          {/* Narration box */}
-          <div className="bg-foreground/10 border-2 border-foreground/30 p-4 mb-8 text-left font-mono text-sm leading-relaxed">
-            <span className="text-primary font-bold">NARRATOR: </span>
-            <span className="text-muted-foreground">
-              Somewhere in the digital shadows, a crime is unfolding. A girl named Maya is in critical
-              condition. The evidence is fragmented across four locations. Only a squad of sharp minds
-              can piece together the truth.
-            </span>
+          {/* Scoring hints */}
+          <div className="flex justify-center gap-6 mb-5 text-sm font-mono text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>🥉</span>
+              <span className="text-xs">3+ correct = Panel Badge</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>🥇</span>
+              <span className="text-xs">Solve the case = Gold Medal</span>
+            </div>
           </div>
 
-          {/* Scan line indicator */}
-          <div className="flex justify-center gap-3 mb-8">
+          {/* SFX labels */}
+          <div className="flex justify-center gap-4 mb-6">
+            <span className="font-black text-lg tracking-wider" style={{ color: "hsl(354 78% 44%)", fontFamily: "'Bangers', cursive" }}>THWACK!</span>
+            <span className="font-black text-lg tracking-wider" style={{ color: "hsl(210 80% 40%)", fontFamily: "'Bangers', cursive" }}>KRA-KOOOM!</span>
+            <span className="font-black text-lg tracking-wider px-3 py-0.5 border-4 border-foreground" style={{ background: "hsl(48 100% 50%)", fontFamily: "'Bangers', cursive" }}>CLICK</span>
+          </div>
+
+          {/* Scan line dots */}
+          <div className="flex justify-center gap-3 mb-6">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full border-2 border-foreground transition-all duration-300 ${
-                  scanLine === i ? "bg-primary scale-150" : "bg-transparent"
+                  scanLine === i ? "scale-150" : "bg-transparent"
                 }`}
+                style={scanLine === i ? { background: "hsl(354 78% 44%)" } : {}}
               />
             ))}
           </div>
@@ -117,33 +124,23 @@ export default function TitleScreen({ onStart }: TitleScreenProps) {
           {/* Start button */}
           <button
             onClick={onStart}
-            className="comic-panel bg-primary text-primary-foreground px-10 py-4 text-2xl font-black tracking-widest uppercase hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all duration-100 active:scale-95 glow-pulse"
-            style={{ boxShadow: "5px 5px 0px hsl(45 100% 30%)" }}
+            className="comic-panel w-full text-white py-4 text-2xl font-black tracking-widest uppercase hover:translate-x-1 hover:translate-y-1 transition-all duration-100 active:scale-95 glow-pulse"
+            style={{
+              background: "hsl(354 78% 44%)",
+              boxShadow: "5px 5px 0px hsl(354 78% 28%)",
+            }}
           >
-            BEGIN INVESTIGATION
+            BEGIN INVESTIGATION →
           </button>
         </div>
 
-        {/* Bottom bar */}
-        <div className="bg-secondary/20 px-6 py-2 border-t-4 border-foreground text-center">
-          <span className="text-xs font-mono text-muted-foreground tracking-widest">
-            FOR 4 DETECTIVES — READING SKILLS REQUIRED
-          </span>
+        {/* Bottom color bar */}
+        <div className="flex h-3">
+          <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
+          <div className="flex-1" style={{ background: "hsl(210 80% 40%)" }} />
+          <div className="flex-1" style={{ background: "hsl(48 100% 50%)" }} />
+          <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
         </div>
-      </div>
-
-      {/* Corner decorations */}
-      <div
-        className="absolute top-1/4 left-6 text-4xl rotate-[-15deg] opacity-60"
-        style={{ filter: "drop-shadow(2px 2px 0px hsl(310 80% 40%))" }}
-      >
-        ★
-      </div>
-      <div
-        className="absolute top-1/3 right-8 text-3xl rotate-[20deg] opacity-60"
-        style={{ filter: "drop-shadow(2px 2px 0px hsl(195 100% 35%))" }}
-      >
-        ★
       </div>
     </div>
   );

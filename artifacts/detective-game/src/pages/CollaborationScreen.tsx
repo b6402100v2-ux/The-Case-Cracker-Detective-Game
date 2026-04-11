@@ -20,10 +20,7 @@ export default function CollaborationScreen() {
     if (!timerActive) return;
     const interval = setInterval(() => {
       setTimeLeft((t) => {
-        if (t <= 1) {
-          setTimerActive(false);
-          return 0;
-        }
+        if (t <= 1) { setTimerActive(false); return 0; }
         return t - 1;
       });
     }, 1000);
@@ -33,7 +30,9 @@ export default function CollaborationScreen() {
   const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
   const seconds = (timeLeft % 60).toString().padStart(2, "0");
   const timerColor =
-    timeLeft < 60 ? "text-destructive" : timeLeft < 180 ? "text-primary" : "text-accent";
+    timeLeft < 60 ? "hsl(354 78% 44%)" :
+    timeLeft < 180 ? "hsl(48 100% 40%)" :
+    "hsl(210 80% 40%)";
 
   const toggleReveal = (i: number) => {
     setRevealed((r) => r.map((v, idx) => (idx === i ? !v : v)));
@@ -48,82 +47,88 @@ export default function CollaborationScreen() {
     submitVerdict();
   };
 
-  const colorMap = ["border-secondary text-secondary", "border-accent text-accent", "border-primary text-primary", "border-secondary text-secondary"];
+  const accentColors = [
+    "hsl(354 78% 44%)",
+    "hsl(210 80% 40%)",
+    "hsl(48 100% 45%)",
+    "hsl(354 78% 44%)",
+  ];
+  const accentBg = [
+    "hsl(354 78% 96%)",
+    "hsl(210 80% 95%)",
+    "hsl(48 100% 93%)",
+    "hsl(354 78% 96%)",
+  ];
 
   return (
     <div className="min-h-screen halftone-bg flex flex-col items-center justify-center p-4">
-      {/* Assemble header */}
-      <div
-        className={`mb-6 text-center transition-all duration-700 ${
-          assembled ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
-      >
-        <div className="sfx-burst text-2xl inline-block mb-3" style={{ background: "hsl(195 100% 55%)", color: "hsl(45 20% 8%)" }}>
+      {/* Top bar */}
+      <div className="fixed top-0 left-0 right-0 flex h-3 z-50">
+        <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
+        <div className="flex-1" style={{ background: "hsl(210 80% 40%)" }} />
+        <div className="flex-1" style={{ background: "hsl(48 100% 50%)" }} />
+        <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
+      </div>
+
+      {/* Header */}
+      <div className={`mb-5 text-center mt-5 transition-all duration-700 ${assembled ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+        <div className="sfx-burst text-xl inline-block mb-3 font-black" style={{ background: "hsl(210 80% 40%)", color: "white" }}>
           KRA-KOOOM!
         </div>
         <h2
           className="text-5xl font-black tracking-widest"
-          style={{
-            color: "hsl(45 100% 55%)",
-            textShadow: "3px 3px 0px hsl(310 80% 40%)",
-            fontFamily: "'Bangers', cursive",
-          }}
+          style={{ color: "hsl(354 78% 44%)", textShadow: "3px 3px 0px hsl(354 78% 28%)", fontFamily: "'Bangers', cursive" }}
         >
           PANELS REJOINING...
         </h2>
-        <p className="text-muted-foreground font-mono text-sm tracking-widest mt-2">
+        <p className="text-muted-foreground font-mono text-sm tracking-widest mt-1">
           DETECTIVES, ASSEMBLE! — COMPARE YOUR CLUES
         </p>
       </div>
 
       {/* Timer */}
-      <div
-        className={`comic-panel bg-card px-6 py-3 mb-6 flex items-center gap-4 ${timerActive ? "glow-pulse" : ""}`}
-      >
+      <div className="comic-panel bg-card px-6 py-3 mb-5 flex items-center gap-4">
         <span className="text-muted-foreground font-mono text-xs tracking-widest uppercase">Discussion Time:</span>
-        <span className={`font-mono text-3xl font-black ${timerColor}`}>
+        <span className="font-mono text-3xl font-black" style={{ color: timerColor, fontFamily: "'Bangers', cursive" }}>
           {minutes}:{seconds}
         </span>
         <button
           onClick={() => setTimerActive((t) => !t)}
-          className="text-xs font-mono text-muted-foreground border border-foreground/30 px-2 py-0.5 hover:text-foreground transition-colors"
+          className="text-xs font-mono border-2 border-foreground px-2 py-0.5 hover:bg-muted transition-colors"
         >
           {timerActive ? "PAUSE" : "RESUME"}
         </button>
       </div>
 
       {/* Clue reveal grid */}
-      <div className="grid grid-cols-2 gap-4 max-w-2xl w-full mb-6">
+      <div className="grid grid-cols-2 gap-4 max-w-2xl w-full mb-5">
         {CLUES.map((clue, i) => (
           <div
             key={i}
-            className={`comic-panel bg-card overflow-hidden transition-all duration-500 ${
-              assembled ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-            }`}
-            style={{ transitionDelay: `${i * 100 + 300}ms` }}
+            className="comic-panel bg-card overflow-hidden transition-all duration-500"
+            style={{ opacity: assembled ? 1 : 0, transform: assembled ? "none" : "translateY(12px)", transitionDelay: `${i * 100 + 200}ms` }}
           >
-            <div className={`border-b-2 border-foreground px-4 py-2 flex items-center justify-between`}>
-              <span className={`text-sm font-black tracking-wide ${colorMap[i].split(" ")[1]}`}>
+            <div className="border-b-2 border-foreground px-4 py-2 flex items-center justify-between" style={{ background: accentColors[i] }}>
+              <span className="text-sm font-black tracking-wide text-white">
                 {clue.icon} {state.detectives[i]?.name || `Det. ${i + 1}`}
               </span>
-              <span className="text-xs font-mono text-muted-foreground">{clue.loc}</span>
+              <span className="text-xs font-mono text-white/80">{clue.loc}</span>
             </div>
-            <div className="p-4">
+            <div className="p-3">
               <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-2">
-                Skill: {clue.skill}
+                {clue.skill}
               </p>
               <button
                 onClick={() => toggleReveal(i)}
-                className={`w-full text-left border-2 px-3 py-2 font-mono text-sm transition-all ${
-                  revealed[i]
-                    ? `${colorMap[i].split(" ")[0]} bg-foreground/5`
-                    : "border-foreground/30 text-muted-foreground"
-                }`}
+                className="w-full text-left border-2 px-3 py-2 font-mono text-sm transition-all"
+                style={revealed[i]
+                  ? { borderColor: accentColors[i], background: accentBg[i], color: "hsl(0 0% 10%)" }
+                  : { borderColor: "hsl(0 0% 80%)", background: "hsl(0 0% 98%)", color: "hsl(0 0% 50%)" }}
               >
                 {revealed[i] ? (
                   <>
-                    <span className="text-xs text-muted-foreground block mb-1">Answer:</span>
-                    <span className="font-bold">{state.panelAnswers[i] || "(no answer)"}</span>
+                    <span className="text-xs text-muted-foreground block mb-0.5">Answer:</span>
+                    <span className="font-black">{state.panelAnswers[i] || "(no answer)"}</span>
                   </>
                 ) : (
                   <span className="tracking-widest">[ CLICK TO REVEAL ]</span>
@@ -135,18 +140,18 @@ export default function CollaborationScreen() {
       </div>
 
       {/* Timeline guide */}
-      <div className="comic-panel-cyan bg-card max-w-2xl w-full p-4 mb-6">
-        <p className="text-accent text-xs font-mono font-bold tracking-widest uppercase mb-3">
+      <div className="comic-panel-cyan bg-card max-w-2xl w-full p-4 mb-5">
+        <p className="text-xs font-mono font-black tracking-widest uppercase mb-2" style={{ color: "hsl(210 80% 40%)" }}>
           ▶ Connect the Timeline:
         </p>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-2">
           {[
             `1. ${state.detectives[0]?.name || "Det. 1"}'s Date`,
             `2. ${state.detectives[1]?.name || "Det. 2"}'s 'They'`,
             `3. ${state.detectives[2]?.name || "Det. 3"}'s Topic`,
             `4. ${state.detectives[3]?.name || "Det. 4"}'s Tone`,
           ].map((item, i) => (
-            <span key={i} className="bg-foreground/10 border border-foreground/20 px-2 py-1 text-xs font-mono text-muted-foreground">
+            <span key={i} className="bg-muted border border-foreground/20 px-2 py-1 text-xs font-mono text-muted-foreground">
               {item}
             </span>
           ))}
@@ -154,28 +159,26 @@ export default function CollaborationScreen() {
       </div>
 
       {/* Final verdict */}
-      <div className="comic-panel bg-card max-w-2xl w-full p-6">
-        <h3 className="text-primary text-xl font-black tracking-widest mb-1 uppercase">
+      <div className="comic-panel bg-card max-w-2xl w-full p-5">
+        <h3 className="font-black tracking-widest mb-1 uppercase text-lg" style={{ color: "hsl(354 78% 44%)" }}>
           Final Case Report
         </h3>
-        <p className="text-muted-foreground font-mono text-xs mb-4">
+        <p className="text-muted-foreground font-mono text-xs mb-3">
           What was the primary cause of Maya's situation?
         </p>
         <textarea
-          className="comic-input resize-none mb-4"
+          className="comic-input resize-none mb-3"
           style={{ minHeight: "80px" }}
-          placeholder="Squad consensus: e.g. Cyberbullying via the Whisper app escalated over two weeks, leading to..."
+          placeholder="e.g. Cyberbullying via the Whisper app escalated over two weeks, leading to..."
           value={verdict}
           onChange={(e) => setVerdict(e.target.value)}
           maxLength={300}
         />
-        {error && (
-          <p className="text-destructive font-mono text-sm mb-3">✗ {error}</p>
-        )}
+        {error && <p className="font-mono text-sm mb-3" style={{ color: "hsl(354 78% 44%)" }}>✗ {error}</p>}
         <button
           onClick={handleSubmit}
-          className="comic-panel w-full bg-primary text-primary-foreground py-4 text-xl font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95"
-          style={{ boxShadow: "5px 5px 0px hsl(45 100% 30%)" }}
+          className="comic-panel w-full text-white py-4 text-xl font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95"
+          style={{ background: "hsl(354 78% 44%)", boxShadow: "5px 5px 0px hsl(354 78% 28%)" }}
         >
           SUBMIT CASE REPORT →
         </button>

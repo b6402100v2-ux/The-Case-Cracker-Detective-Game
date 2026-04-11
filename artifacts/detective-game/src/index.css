@@ -29,22 +29,22 @@
 }
 
 :root {
-  --background: 45 20% 10%;
-  --foreground: 45 90% 95%;
-  --border: 45 30% 25%;
-  --input: 45 20% 18%;
-  --ring: 45 100% 60%;
-  --card: 45 20% 13%;
-  --card-foreground: 45 90% 95%;
-  --primary: 45 100% 55%;
-  --primary-foreground: 45 20% 8%;
-  --secondary: 310 80% 55%;
+  --background: 40 30% 96%;
+  --foreground: 0 0% 10%;
+  --border: 0 0% 10%;
+  --input: 0 0% 100%;
+  --ring: 48 100% 50%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 10%;
+  --primary: 354 78% 44%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 80% 40%;
   --secondary-foreground: 0 0% 100%;
-  --muted: 45 20% 18%;
-  --muted-foreground: 45 30% 60%;
-  --accent: 195 100% 55%;
-  --accent-foreground: 45 20% 8%;
-  --destructive: 0 84% 60%;
+  --muted: 40 20% 90%;
+  --muted-foreground: 0 0% 40%;
+  --accent: 48 100% 50%;
+  --accent-foreground: 0 0% 10%;
+  --destructive: 354 78% 44%;
   --destructive-foreground: 0 0% 100%;
   --app-font-sans: 'Bangers', 'Comic Sans MS', cursive;
   --app-font-mono: 'Courier New', monospace;
@@ -59,10 +59,12 @@
   }
 }
 
-/* Comic book halftone texture */
+/* Notebook paper texture */
 .halftone-bg {
-  background-image: radial-gradient(circle, rgba(255,200,0,0.08) 1px, transparent 1px);
-  background-size: 12px 12px;
+  background-color: hsl(40 30% 96%);
+  background-image:
+    linear-gradient(transparent calc(100% - 1px), rgba(180,210,240,0.5) 1px);
+  background-size: 100% 2rem;
 }
 
 /* Comic panel border */
@@ -73,18 +75,18 @@
 }
 
 .comic-panel-cyan {
-  border: 4px solid hsl(195 100% 55%);
-  box-shadow: 6px 6px 0px hsl(195 100% 55%);
+  border: 4px solid hsl(210 80% 40%);
+  box-shadow: 6px 6px 0px hsl(210 80% 40%);
 }
 
 .comic-panel-pink {
-  border: 4px solid hsl(310 80% 55%);
-  box-shadow: 6px 6px 0px hsl(310 80% 55%);
+  border: 4px solid hsl(354 78% 44%);
+  box-shadow: 6px 6px 0px hsl(354 78% 44%);
 }
 
 .comic-panel-yellow {
-  border: 4px solid hsl(45 100% 55%);
-  box-shadow: 6px 6px 0px hsl(45 100% 55%);
+  border: 4px solid hsl(48 100% 45%);
+  box-shadow: 6px 6px 0px hsl(48 85% 35%);
 }
 
 /* SFX burst shape */
@@ -125,8 +127,8 @@
 
 /* Pulse glow */
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px 2px hsl(45 100% 55% / 0.5); }
-  50% { box-shadow: 0 0 20px 6px hsl(45 100% 55% / 0.9); }
+  0%, 100% { box-shadow: 4px 4px 0 hsl(354 78% 35%), 0 0 10px 2px hsl(354 78% 44% / 0.3); }
+  50% { box-shadow: 4px 4px 0 hsl(354 78% 35%), 0 0 20px 6px hsl(354 78% 44% / 0.5); }
 }
 .glow-pulse {
   animation: glow-pulse 2s ease infinite;
@@ -167,21 +169,22 @@
 /* Comic speech bubble */
 .speech-bubble {
   position: relative;
-  background: hsl(var(--foreground));
-  color: hsl(var(--background));
+  background: hsl(48 100% 50%);
+  color: hsl(0 0% 10%);
+  border: 3px solid hsl(0 0% 10%);
   border-radius: 4px;
   padding: 0.75rem 1rem;
 }
 .speech-bubble::after {
   content: '';
   position: absolute;
-  bottom: -16px;
+  bottom: -19px;
   left: 24px;
   width: 0;
   height: 0;
   border-left: 12px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 16px solid hsl(var(--foreground));
+  border-top: 19px solid hsl(0 0% 10%);
 }
 
 /* Skewed heading style */
@@ -193,20 +196,20 @@
 
 /* Input comic style */
 .comic-input {
-  background: hsl(45 20% 95%);
-  color: hsl(45 20% 8%);
-  border: 3px solid hsl(var(--foreground));
+  background: hsl(0 0% 100%);
+  color: hsl(0 0% 10%);
+  border: 3px solid hsl(0 0% 10%);
   font-family: var(--app-font-mono);
   font-size: 1rem;
   padding: 0.5rem 0.75rem;
   width: 100%;
   outline: none;
-  box-shadow: 3px 3px 0 hsl(var(--foreground));
-  transition: box-shadow 0.1s;
+  box-shadow: 3px 3px 0 hsl(0 0% 10%);
+  transition: box-shadow 0.1s, border-color 0.1s;
 }
 .comic-input:focus {
-  box-shadow: 5px 5px 0 hsl(45 100% 55%);
-  border-color: hsl(45 100% 55%);
+  box-shadow: 4px 4px 0 hsl(210 80% 40%);
+  border-color: hsl(210 80% 40%);
 }
 
 /* Progress bar dots */
@@ -214,13 +217,13 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 3px solid hsl(var(--foreground));
+  border: 3px solid hsl(0 0% 10%);
   transition: background 0.3s;
 }
 .progress-dot.active {
-  background: hsl(45 100% 55%);
-  box-shadow: 0 0 8px hsl(45 100% 55%);
+  background: hsl(48 100% 50%);
+  box-shadow: 0 0 6px hsl(48 100% 50% / 0.6);
 }
 .progress-dot.complete {
-  background: hsl(195 100% 55%);
+  background: hsl(210 80% 40%);
 }

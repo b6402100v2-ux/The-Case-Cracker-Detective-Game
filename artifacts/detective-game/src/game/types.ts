@@ -20,6 +20,7 @@ export interface Clue {
   ans: string;
   sfx: string;
   sfxColor: string;
+  sfxTextColor: string;
   panelColor: string;
   icon: string;
 }
@@ -44,7 +45,8 @@ export const CLUES: Clue[] = [
     q: "On what EXACT DATE was the 'Whisper' app first mentioned?",
     ans: "sept 12",
     sfx: "THWACK!",
-    sfxColor: "hsl(310 80% 55%)",
+    sfxColor: "hsl(354 78% 44%)",
+    sfxTextColor: "white",
     panelColor: "comic-panel-pink",
     icon: "📓",
   },
@@ -56,7 +58,8 @@ export const CLUES: Clue[] = [
     q: "In the text, who does the word 'THEY' refer to?",
     ans: "classmates",
     sfx: "KRA-KOOOM!",
-    sfxColor: "hsl(195 100% 55%)",
+    sfxColor: "hsl(210 80% 40%)",
+    sfxTextColor: "white",
     panelColor: "comic-panel-cyan",
     icon: "🔒",
   },
@@ -68,7 +71,8 @@ export const CLUES: Clue[] = [
     q: "What is the ONE main topic connecting all these searches?",
     ans: "cyberbullying",
     sfx: "CLICK!",
-    sfxColor: "hsl(45 100% 55%)",
+    sfxColor: "hsl(48 100% 50%)",
+    sfxTextColor: "hsl(0 0% 10%)",
     panelColor: "comic-panel-yellow",
     icon: "💻",
   },
@@ -80,7 +84,8 @@ export const CLUES: Clue[] = [
     q: "Based on the dialogue, what is User02's TONE?",
     ans: "hostile",
     sfx: "SHATTER!",
-    sfxColor: "hsl(310 80% 55%)",
+    sfxColor: "hsl(354 78% 44%)",
+    sfxTextColor: "white",
     panelColor: "comic-panel-pink",
     icon: "💬",
   },
