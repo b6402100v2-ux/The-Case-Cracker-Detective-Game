@@ -1,0 +1,117 @@
+import time
+import os
+
+# --- COMIC BOOK STYLING CONSTANTS ---
+class ComicStyle:
+    # Colors
+    HEADER = '\033[95m'  # Purple
+    NEON_CYAN = '\033[96m'
+    NEON_PINK = '\033[91m'
+    WARNING = '\033[93m' # Yellow
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    ENDC = '\033[0m'     # Reset
+    
+    # Graphic "Sound Effects"
+    SFX_THWACK = f"{BOLD}{NEON_PINK}[ THWACK! ]{ENDC}"
+    SFX_SHATTER = f"{BOLD}{NEON_CYAN}[ KRA-KOOOM! ]{ENDC}"
+    SFX_CLICK = f"{BOLD}{WARNING}[ CLICK ]{ENDC}"
+
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def show_panel_border():
+    print(f"{ComicStyle.NEON_CYAN}" + "="*60 + f"{ComicStyle.ENDC}")
+
+def main():
+    clear()
+    # TITLE SPLASH PAGE
+    print(f"{ComicStyle.HEADER}{ComicStyle.BOLD}")
+    print("      _________________________________________________")
+    print("     |                                                 |")
+    print("     |           YOUTH DETECTIVE AGENCY                |")
+    print("     |      CASE #101: THE SILENT NOTIFICATION         |")
+    print("     |_________________________________________________|")
+    print(f"{ComicStyle.ENDC}")
+    
+    group_name = input(f"{ComicStyle.BOLD}Enter your SQUAD NAME: {ComicStyle.ENDC}").upper()
+    detectives = []
+    for i in range(1, 5):
+        name = input(f"Detective {i}, state your name: ")
+        detectives.append(name)
+
+    print(f"\n{ComicStyle.SFX_THWACK}")
+    print(f"{ComicStyle.WARNING}NARRATOR:{ComicStyle.ENDC} Squad {group_name}, a girl named Maya is in critical condition.")
+    print("The digital evidence is fragmented. You must split up to find the truth.")
+    input(f"\n{ComicStyle.BOLD}PRESS ENTER TO FRACTURE THE PANELS...{ComicStyle.ENDC}")
+
+    # THE JIGSAW DATA
+    clues = [
+        {
+            "loc": "MAYA'S BEDROOM (The Diary)",
+            "skill": "SKIMMING & SCANNING",
+            "text": "SEPT 5: New phone! Finally.\nSEPT 12: Someone started a thread on 'WHISPER'. I'm at the bottom.\nSEPT 15: The comments on my photo are getting mean. Why my glasses?",
+            "q": "On what EXACT DATE was the 'Whisper' app first mentioned?",
+            "ans": "sept 12"
+        },
+        {
+            "loc": "SCHOOL HALLWAY (Locker 402)",
+            "skill": "REFERENCE WORDS",
+            "text": "NOTE: 'You think you can just ignore IT? THEY are talking about \nTHIS in every group chat. Delete your account before IT gets worse.'",
+            "q": "In the text, who does the word 'THEY' refer to?",
+            "ans": "classmates"
+        },
+        {
+            "loc": "COMPUTER LAB (Browser History)",
+            "skill": "MAIN IDEA IDENTIFICATION",
+            "text": "- Search: 'How to block anonymous users'\n- Search: 'Can police track Whisper app?'\n- Article: 'The Weight of Pixels: Why digital hate hurts.'",
+            "q": "What is the ONE main topic connecting all these searches?",
+            "ans": "cyberbullying"
+        },
+        {
+            "loc": "THE CAFETERIA (Leaked Chat)",
+            "skill": "TONE & INFERENCE",
+            "text": "User02: 'Did she cry? Good. Maybe she'll get the hint she \ndoesn't belong here.'\nUser88: 'Is this too far?'\nUser02: 'No. It's just a joke. Don't be a snitch.'",
+            "q": "Based on the sharp dialogue bubbles, what is User02's TONE?",
+            "ans": "hostile"
+        }
+    ]
+
+    # INDIVIDUAL PHASE
+    for i in range(4):
+        clear()
+        show_panel_border()
+        print(f"{ComicStyle.BOLD}PANEL {i+1}: {detectives[i]} is at {clues[i]['loc']}{ComicStyle.ENDC}")
+        print(f"{ComicStyle.NEON_CYAN}MISSION: {clues[i]['skill']}{ComicStyle.ENDC}")
+        show_panel_border()
+        
+        print(f"\n{clues[i]['text']}\n")
+        
+        show_panel_border()
+        ans = input(f"{ComicStyle.WARNING}QUESTION:{ComicStyle.ENDC} {clues[i]['q']}\n> ").lower()
+        
+        print(f"\n{ComicStyle.SFX_CLICK} Data captured. Do not show others yet.")
+        input("Press Enter to lock this panel...")
+
+    # COLLABORATION PHASE
+    clear()
+    print(f"{ComicStyle.SFX_SHATTER}")
+    print(f"{ComicStyle.HEADER}{ComicStyle.BOLD}PANELS REJOINING...{ComicStyle.ENDC}")
+    print(f"\n{ComicStyle.BOLD}DETECTIVES, ASSEMBLE!{ComicStyle.ENDC}")
+    print("You have 10 minutes to discuss your clues. Map out the timeline.")
+    print(f"1. {detectives[0]}'s Date  2. {detectives[1]}'s 'They'  3. {detectives[2]}'s Topic  4. {detectives[3]}'s Tone")
+    
+    time.sleep(2)
+    print("\n" + "-"*30)
+    final_verdict = input(f"{ComicStyle.BOLD}FINAL CASE REPORT: What was the primary cause of the attempt?{ComicStyle.ENDC}\n> ")
+    
+    clear()
+    print(f"{ComicStyle.NEON_CYAN}ANALYZING REPORT...{ComicStyle.ENDC}")
+    time.sleep(2)
+    print(f"\n{ComicStyle.BOLD}CASE FILE: {group_name}{ComicStyle.ENDC}")
+    print(f"CONCLUSION: {final_verdict.upper()}")
+    print(f"\n{ComicStyle.WARNING}NARRATOR: The evidence is clear. With your help, the police have \nshut down the Whisper app. Maya is recovering. Well done.{ComicStyle.ENDC}")
+    print(f"\n{ComicStyle.HEADER}--- THE END ---{ComicStyle.ENDC}")
+
+if __name__ == "__main__":
+    main()

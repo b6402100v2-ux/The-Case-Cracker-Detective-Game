@@ -1,0 +1,226 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --font-sans: var(--app-font-sans);
+  --font-mono: var(--app-font-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+:root {
+  --background: 45 20% 10%;
+  --foreground: 45 90% 95%;
+  --border: 45 30% 25%;
+  --input: 45 20% 18%;
+  --ring: 45 100% 60%;
+  --card: 45 20% 13%;
+  --card-foreground: 45 90% 95%;
+  --primary: 45 100% 55%;
+  --primary-foreground: 45 20% 8%;
+  --secondary: 310 80% 55%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 45 20% 18%;
+  --muted-foreground: 45 30% 60%;
+  --accent: 195 100% 55%;
+  --accent-foreground: 45 20% 8%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --app-font-sans: 'Bangers', 'Comic Sans MS', cursive;
+  --app-font-mono: 'Courier New', monospace;
+  --radius: 0.25rem;
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--app-font-sans);
+  }
+}
+
+/* Comic book halftone texture */
+.halftone-bg {
+  background-image: radial-gradient(circle, rgba(255,200,0,0.08) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+/* Comic panel border */
+.comic-panel {
+  border: 4px solid hsl(var(--foreground));
+  box-shadow: 6px 6px 0px hsl(var(--foreground));
+  position: relative;
+}
+
+.comic-panel-cyan {
+  border: 4px solid hsl(195 100% 55%);
+  box-shadow: 6px 6px 0px hsl(195 100% 55%);
+}
+
+.comic-panel-pink {
+  border: 4px solid hsl(310 80% 55%);
+  box-shadow: 6px 6px 0px hsl(310 80% 55%);
+}
+
+.comic-panel-yellow {
+  border: 4px solid hsl(45 100% 55%);
+  box-shadow: 6px 6px 0px hsl(45 100% 55%);
+}
+
+/* SFX burst shape */
+.sfx-burst {
+  display: inline-block;
+  padding: 0.3rem 1.2rem;
+  clip-path: polygon(
+    5% 20%, 15% 0%, 25% 20%, 35% 0%, 50% 25%,
+    65% 0%, 75% 20%, 85% 0%, 95% 20%, 100% 50%,
+    95% 80%, 85% 100%, 75% 80%, 65% 100%, 50% 75%,
+    35% 100%, 25% 80%, 15% 100%, 5% 80%, 0% 50%
+  );
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Typewriter effect */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Shake animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.shake {
+  animation: shake 0.4s ease;
+}
+
+/* Pulse glow */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px 2px hsl(45 100% 55% / 0.5); }
+  50% { box-shadow: 0 0 20px 6px hsl(45 100% 55% / 0.9); }
+}
+.glow-pulse {
+  animation: glow-pulse 2s ease infinite;
+}
+
+/* Stamp effect */
+@keyframes stamp {
+  0% { transform: scale(3) rotate(-20deg); opacity: 0; }
+  60% { transform: scale(0.95) rotate(2deg); opacity: 1; }
+  80% { transform: scale(1.05) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.stamp-in {
+  animation: stamp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Slide in from bottom */
+@keyframes slide-up {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.slide-up {
+  animation: slide-up 0.4s ease forwards;
+}
+
+/* Flicker effect for title */
+@keyframes flicker {
+  0%, 95%, 100% { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
+  98% { opacity: 0.6; }
+  99% { opacity: 1; }
+}
+.flicker {
+  animation: flicker 4s ease infinite;
+}
+
+/* Comic speech bubble */
+.speech-bubble {
+  position: relative;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -16px;
+  left: 24px;
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 16px solid hsl(var(--foreground));
+}
+
+/* Skewed heading style */
+.skew-heading {
+  display: inline-block;
+  transform: skewX(-6deg);
+  padding: 0.2rem 0.8rem;
+}
+
+/* Input comic style */
+.comic-input {
+  background: hsl(45 20% 95%);
+  color: hsl(45 20% 8%);
+  border: 3px solid hsl(var(--foreground));
+  font-family: var(--app-font-mono);
+  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  outline: none;
+  box-shadow: 3px 3px 0 hsl(var(--foreground));
+  transition: box-shadow 0.1s;
+}
+.comic-input:focus {
+  box-shadow: 5px 5px 0 hsl(45 100% 55%);
+  border-color: hsl(45 100% 55%);
+}
+
+/* Progress bar dots */
+.progress-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid hsl(var(--foreground));
+  transition: background 0.3s;
+}
+.progress-dot.active {
+  background: hsl(45 100% 55%);
+  box-shadow: 0 0 8px hsl(45 100% 55%);
+}
+.progress-dot.complete {
+  background: hsl(195 100% 55%);
+}
