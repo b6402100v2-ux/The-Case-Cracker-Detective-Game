@@ -1,71 +1,109 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useGame } from "@/game/GameContext";
 import { CLUES } from "@/game/types";
 
 export default function IndividualPanel() {
-  const { state, submitPanelAnswer, nextPanel } = useGame();
+  const { state, selectAnswer, submitPanel } = useGame();
   const clue = CLUES[state.currentPanel];
   const detective = state.detectives[state.currentPanel];
+  const selections = state.panelSelections[state.currentPanel];
 
-  const [answer, setAnswer] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [correct, setCorrect] = useState(false);
-  const [shake, setShake] = useState(false);
-  const [showHint, setShowHint] = useState(false);
+  const [error, setError] = useState("");
   const [stampIn, setStampIn] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setAnswer("");
-    setSubmitted(false);
-    setCorrect(false);
-    setShake(false);
-    setShowHint(false);
-    setStampIn(false);
-    setTimeout(() => inputRef.current?.focus(), 100);
-  }, [state.currentPanel]);
-
-  const handleSubmit = () => {
-    if (!answer.trim()) return;
-    const isCorrect = submitPanelAnswer(answer);
-    setCorrect(isCorrect);
-    setSubmitted(true);
-    if (isCorrect) {
-      setTimeout(() => setStampIn(true), 200);
-    } else {
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      setTimeout(() => setShowHint(true), 800);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !submitted) handleSubmit();
-    if (e.key === "Enter" && submitted && correct) nextPanel();
-  };
 
   const panelNum = state.currentPanel + 1;
-
-  // Colors per panel: red, blue, yellow, red
   const accentColors = [
     "hsl(354 78% 44%)",
     "hsl(210 80% 40%)",
-    "hsl(48 100% 45%)",
+    "hsl(48 100% 40%)",
     "hsl(354 78% 44%)",
   ];
   const accentDark = [
     "hsl(354 78% 28%)",
     "hsl(210 80% 25%)",
-    "hsl(48 85% 30%)",
+    "hsl(48 85% 28%)",
     "hsl(354 78% 28%)",
   ];
-  const accentText = ["white", "white", "hsl(0 0% 10%)", "white"];
+  const accentBg = [
+    "hsl(354 78% 96%)",
+    "hsl(210 80% 95%)",
+    "hsl(48 100% 92%)",
+    "hsl(354 78% 96%)",
+  ];
+  const accentTextLight = ["white", "white", "hsl(0 0% 10%)", "white"];
+
   const color = accentColors[state.currentPanel];
   const colorDark = accentDark[state.currentPanel];
-  const textColor = accentText[state.currentPanel];
+  const colorBg = accentBg[state.currentPanel];
+  const textColor = accentTextLight[state.currentPanel];
+
+  const score = submitted
+    ? clue.questions.reduce((acc, q, i) => acc + (selections[i] === q.ans ? 1 : 0), 0)
+    : 0;
+
+  const allAnswered = selections.every((s) => s !== null);
+
+  const handleSubmit = () => {
+    if (!allAnswered) {
+      setError("Answer all 5 questions before submitting!");
+      return;
+    }
+    setError("");
+    setSubmitted(true);
+    setTimeout(() => setStampIn(true), 300);
+  };
+
+  const handleNext = () => {
+    submitPanel();
+    setSubmitted(false);
+    setStampIn(false);
+    setError("");
+  };
+
+  const optionStyle = (qIdx: number, key: "A" | "B" | "C") => {
+    const selected = selections[qIdx] === key;
+    const correct = clue.questions[qIdx].ans === key;
+
+    if (!submitted) {
+      return {
+        base: "border-2 px-4 py-2 font-mono text-sm cursor-pointer transition-all duration-100 flex items-center gap-3 hover:translate-x-0.5 select-none",
+        style: selected
+          ? { borderColor: color, background: colorBg, color: "hsl(0 0% 10%)" }
+          : { borderColor: "hsl(0 0% 75%)", background: "white", color: "hsl(0 0% 30%)" },
+      };
+    }
+    // After submit
+    if (correct) {
+      return {
+        base: "border-2 px-4 py-2 font-mono text-sm flex items-center gap-3",
+        style: { borderColor: "hsl(210 80% 40%)", background: "hsl(210 80% 95%)", color: "hsl(0 0% 10%)" },
+      };
+    }
+    if (selected && !correct) {
+      return {
+        base: "border-2 px-4 py-2 font-mono text-sm flex items-center gap-3",
+        style: { borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)", color: "hsl(0 0% 10%)" },
+      };
+    }
+    return {
+      base: "border-2 px-4 py-2 font-mono text-sm flex items-center gap-3",
+      style: { borderColor: "hsl(0 0% 85%)", background: "hsl(0 0% 98%)", color: "hsl(0 0% 60%)" },
+    };
+  };
+
+  const optionIcon = (qIdx: number, key: "A" | "B" | "C") => {
+    if (!submitted) {
+      return selections[qIdx] === key ? "◉" : "○";
+    }
+    const correct = clue.questions[qIdx].ans === key;
+    if (correct) return "✓";
+    if (selections[qIdx] === key) return "✗";
+    return "○";
+  };
 
   return (
-    <div className="min-h-screen halftone-bg flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen halftone-bg flex flex-col items-center py-6 px-4">
       {/* Top bar */}
       <div className="fixed top-0 left-0 right-0 flex h-3 z-50">
         <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
@@ -74,160 +112,152 @@ export default function IndividualPanel() {
         <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
       </div>
 
-      {/* Progress indicator */}
-      <div className="flex items-center gap-3 mb-5 mt-5">
+      {/* Progress */}
+      <div className="flex items-center gap-3 mt-6 mb-4">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="flex items-center gap-3">
             <div className={`progress-dot ${i < state.currentPanel ? "complete" : i === state.currentPanel ? "active" : ""}`} />
-            {i < 3 && (
-              <div className={`h-1 w-10 border-t-2 border-dashed ${i < state.currentPanel ? "border-foreground" : "border-foreground/20"}`} />
-            )}
+            {i < 3 && <div className={`h-1 w-8 border-t-2 border-dashed ${i < state.currentPanel ? "border-foreground" : "border-foreground/20"}`} />}
           </div>
         ))}
       </div>
 
-      {/* SFX + panel label */}
-      <div className="flex items-center gap-4 mb-3">
+      {/* SFX badge */}
+      <div className="flex items-center gap-3 mb-4">
         <div className="sfx-burst text-base font-black px-4 py-1" style={{ background: clue.sfxColor, color: clue.sfxTextColor }}>
           {clue.sfx}
         </div>
-        <span className="text-muted-foreground font-mono text-xs tracking-widest">
-          PANEL {panelNum} OF 4
-        </span>
+        <span className="text-muted-foreground font-mono text-xs tracking-widest">PANEL {panelNum} OF 4</span>
       </div>
 
       {/* Main panel */}
-      <div className={`${clue.panelColor} bg-card max-w-xl w-full overflow-hidden`}>
+      <div className={`${clue.panelColor} bg-card max-w-2xl w-full overflow-hidden relative`}>
+        {/* Solved stamp */}
+        {stampIn && (
+          <div className="absolute top-4 right-4 z-10 stamp-in">
+            <div
+              className="text-2xl font-black border-4 px-3 py-1 rotate-[-12deg]"
+              style={{ color: score >= 3 ? "hsl(210 80% 40%)" : "hsl(354 78% 44%)", borderColor: score >= 3 ? "hsl(210 80% 40%)" : "hsl(354 78% 44%)", fontFamily: "'Bangers', cursive" }}
+            >
+              {score}/5
+            </div>
+          </div>
+        )}
+
         {/* Panel header */}
         <div className="border-b-4 border-foreground px-5 py-3 flex items-center justify-between" style={{ background: color }}>
           <div>
             <span className="text-xl font-black uppercase tracking-wide" style={{ color: textColor }}>
-              {clue.icon} {clue.loc}
+              {clue.icon} {clue.date}: {clue.loc}
             </span>
-            <span className="font-mono text-xs ml-2 opacity-80" style={{ color: textColor }}>— {clue.locLabel}</span>
+            <span className="block text-xs font-mono opacity-80 mt-0.5" style={{ color: textColor }}>
+              Domain: {clue.domain}
+            </span>
           </div>
           <div className="text-right">
-            <p className="font-mono text-xs tracking-widest opacity-70" style={{ color: textColor }}>ASSIGNED TO</p>
+            <p className="font-mono text-xs tracking-widest opacity-70" style={{ color: textColor }}>DETECTIVE</p>
             <p className="font-black text-sm tracking-widest uppercase" style={{ color: textColor }}>
-              {detective?.name || `Detective ${panelNum}`}
+              {detective?.name || `Det. ${panelNum}`}
             </p>
           </div>
         </div>
 
-        <div className="p-5 space-y-4">
-          {/* Skill badge */}
-          <div className="inline-flex items-center gap-2 border-2 border-foreground/30 bg-muted px-3 py-1">
-            <span className="text-xs font-mono font-bold text-muted-foreground tracking-widest uppercase">SKILL:</span>
-            <span className="text-xs font-mono font-black text-foreground tracking-widest uppercase">{clue.skill}</span>
-          </div>
-
-          {/* Evidence text */}
-          <div className="bg-muted border-2 border-foreground/20 p-4 font-mono text-sm leading-loose">
-            <p className="text-xs tracking-widest mb-2 font-black text-muted-foreground uppercase">▶ Evidence Found:</p>
-            {clue.text.split("\n").map((line, i) => (
-              <p key={i} className="text-foreground mb-1">{line}</p>
+        <div className="p-5 space-y-5">
+          {/* Diary entry */}
+          <div className="bg-muted border-2 border-foreground/15 p-4 font-mono text-xs leading-relaxed max-h-52 overflow-y-auto">
+            <p className="text-xs tracking-widest font-black text-muted-foreground uppercase mb-2">📖 Diary Entry:</p>
+            {clue.text.split("\n\n").map((para, i) => (
+              <p key={i} className="text-foreground/80 mb-2">{para}</p>
             ))}
           </div>
 
-          {/* Question bubble */}
-          <div className="speech-bubble">
-            <p className="font-mono text-sm font-bold leading-relaxed text-foreground">
-              ❓ {clue.q}
+          {/* Questions */}
+          <div>
+            <p className="text-xs font-mono font-black tracking-widest uppercase mb-3" style={{ color }}>
+              ▶ Answer All 5 Questions:
             </p>
-          </div>
-          <div className="pt-5" />
-
-          {/* Hint */}
-          {showHint && !correct && (
-            <div className="slide-up border-2 border-foreground/30 bg-muted p-3">
-              <p className="text-xs font-mono font-black tracking-widest uppercase mb-1" style={{ color }}>
-                💡 Hint:
-              </p>
-              <p className="text-muted-foreground text-xs font-mono">
-                Think about: <span className="italic font-bold">"{clue.ans}"</span> — re-read the evidence carefully!
-              </p>
-            </div>
-          )}
-
-          {/* Answer input */}
-          {!submitted && (
-            <div className={shake ? "shake" : ""}>
-              <label className="block text-xs font-mono font-black text-muted-foreground tracking-widest uppercase mb-2">
-                Your Answer:
-              </label>
-              <div className="flex gap-2">
-                <input
-                  ref={inputRef}
-                  className="comic-input flex-1"
-                  placeholder="Type your answer..."
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  maxLength={60}
-                />
-                <button
-                  onClick={handleSubmit}
-                  className="comic-panel font-black tracking-widest uppercase text-sm px-5 py-2 hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95 whitespace-nowrap"
-                  style={{ background: color, color: textColor, boxShadow: `3px 3px 0 ${colorDark}` }}
-                >
-                  SUBMIT
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Correct result */}
-          {submitted && correct && (
-            <div className="relative">
-              <div className="slide-up border-2 p-4 text-center" style={{ borderColor: "hsl(210 80% 40%)", background: "hsl(210 80% 95%)" }}>
-                <p className="text-xl font-black tracking-widest mb-1" style={{ color: "hsl(210 80% 40%)" }}>
-                  ✓ CLUE CAPTURED!
-                </p>
-                <p className="text-muted-foreground font-mono text-sm mb-1">
-                  Recorded: <span className="font-bold text-foreground">"{answer}"</span>
-                </p>
-                <p className="text-muted-foreground font-mono text-xs">
-                  Do not show others. Lock this panel.
-                </p>
-              </div>
-              {stampIn && (
-                <div className="absolute top-2 right-3 stamp-in">
-                  <div className="text-2xl font-black border-4 px-2 py-0.5 rotate-[-15deg]"
-                    style={{ color: "hsl(210 80% 40%)", borderColor: "hsl(210 80% 40%)", fontFamily: "'Bangers', cursive" }}>
-                    SOLVED
+            <div className="space-y-4">
+              {clue.questions.map((q, qIdx) => {
+                const style = optionStyle(qIdx, selections[qIdx] as "A" | "B" | "C");
+                return (
+                  <div key={qIdx} className="space-y-2">
+                    <p className="font-mono text-sm font-bold text-foreground">
+                      <span className="font-black" style={{ color }}>{qIdx + 1}.</span> {q.q}
+                    </p>
+                    <div className="grid grid-cols-1 gap-1.5 pl-4">
+                      {q.options.map((opt) => {
+                        const s = optionStyle(qIdx, opt.key);
+                        return (
+                          <button
+                            key={opt.key}
+                            className={s.base}
+                            style={s.style}
+                            onClick={() => !submitted && selectAnswer(state.currentPanel, qIdx, opt.key)}
+                            disabled={submitted}
+                          >
+                            <span className="font-black w-4 shrink-0" style={{ color: submitted ? undefined : (selections[qIdx] === opt.key ? color : "hsl(0 0% 60%)") }}>
+                              {optionIcon(qIdx, opt.key)}
+                            </span>
+                            <span className="font-black mr-1" style={{ color: submitted ? undefined : (selections[qIdx] === opt.key ? color : "hsl(0 0% 50%)") }}>
+                              {opt.key})
+                            </span>
+                            {opt.text}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
-              <button
-                onClick={nextPanel}
-                className="comic-panel w-full mt-4 text-white py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95"
-                style={{ background: "hsl(354 78% 44%)", boxShadow: "4px 4px 0 hsl(354 78% 28%)" }}
-              >
-                {state.currentPanel < 3 ? "LOCK THIS PANEL →" : "ASSEMBLE DETECTIVES →"}
-              </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="font-mono text-sm font-bold" style={{ color: "hsl(354 78% 44%)" }}>✗ {error}</p>
+          )}
+
+          {/* Score result */}
+          {submitted && (
+            <div className="slide-up border-2 p-4 text-center" style={{
+              borderColor: score >= 3 ? "hsl(210 80% 40%)" : "hsl(354 78% 44%)",
+              background: score >= 3 ? "hsl(210 80% 95%)" : "hsl(354 78% 96%)",
+            }}>
+              <p className="font-black text-xl tracking-widest" style={{ color: score >= 3 ? "hsl(210 80% 40%)" : "hsl(354 78% 44%)", fontFamily: "'Bangers', cursive" }}>
+                {score >= 4 ? "EXCELLENT!" : score >= 3 ? "GOOD WORK!" : score >= 2 ? "PARTIAL CLUE" : "KEEP TRYING"}
+              </p>
+              <p className="font-mono text-sm text-muted-foreground mt-1">
+                Score: <strong>{score}/5</strong> correct answers
+              </p>
+              <p className="font-mono text-xs text-muted-foreground mt-1">
+                Lock this panel. Don't share your answers yet.
+              </p>
             </div>
           )}
 
-          {/* Wrong result */}
-          {submitted && !correct && (
-            <div className={`slide-up border-2 border-destructive p-4 ${shake ? "shake" : ""}`} style={{ background: "hsl(354 78% 97%)" }}>
-              <p className="text-xl font-black tracking-widest mb-2" style={{ color: "hsl(354 78% 44%)" }}>
-                ✗ INCORRECT — TRY AGAIN
-              </p>
-              <button
-                onClick={() => { setSubmitted(false); setShake(false); setAnswer(""); setTimeout(() => inputRef.current?.focus(), 50); }}
-                className="comic-panel text-white px-5 py-2 font-black tracking-widest uppercase text-sm hover:translate-x-0.5 hover:translate-y-0.5 transition-all"
-                style={{ background: "hsl(354 78% 44%)", boxShadow: "3px 3px 0 hsl(354 78% 28%)" }}
-              >
-                RETRY
-              </button>
-            </div>
+          {/* Buttons */}
+          {!submitted ? (
+            <button
+              onClick={handleSubmit}
+              className="comic-panel w-full text-white py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95"
+              style={{ background: color, boxShadow: `4px 4px 0 ${colorDark}` }}
+            >
+              SUBMIT ANSWERS ({selections.filter(Boolean).length}/5 selected)
+            </button>
+          ) : (
+            <button
+              onClick={handleNext}
+              className="comic-panel w-full text-white py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95"
+              style={{ background: "hsl(354 78% 44%)", boxShadow: "4px 4px 0 hsl(354 78% 28%)" }}
+            >
+              {state.currentPanel < 3 ? "LOCK THIS PANEL →" : "ASSEMBLE DETECTIVES →"}
+            </button>
           )}
         </div>
       </div>
 
-      <p className="mt-4 text-muted-foreground font-mono text-xs text-center tracking-widest">
-        PASS THE DEVICE TO DETECTIVE {panelNum}
+      <p className="mt-3 text-muted-foreground font-mono text-xs text-center tracking-widest">
+        PASS THE DEVICE TO DETECTIVE {panelNum} — {detective?.name?.toUpperCase() || "UNKNOWN"}
       </p>
     </div>
   );

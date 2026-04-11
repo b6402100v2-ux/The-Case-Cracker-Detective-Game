@@ -8,12 +8,15 @@ interface GameContextValue {
   setSquadName: (name: string) => void;
   setDetective: (index: number, name: string) => void;
   startGame: () => void;
-  submitPanelAnswer: (answer: string) => boolean;
-  nextPanel: () => void;
+  selectAnswer: (panelIndex: number, questionIndex: number, key: "A" | "B" | "C") => void;
+  submitPanel: () => void;
   setFinalVerdict: (verdict: string) => void;
   submitVerdict: () => void;
   resetGame: () => void;
 }
+
+const makeEmptySelections = () =>
+  CLUES.map((c) => c.questions.map(() => null as ("A" | "B" | "C") | null));
 
 const initialState: GameState = {
   phase: "title",
@@ -25,9 +28,8 @@ const initialState: GameState = {
     { name: "", index: 3 },
   ],
   currentPanel: 0,
-  panelAnswers: ["", "", "", ""],
-  panelCorrect: [false, false, false, false],
-  collaborationAnswer: "",
+  panelSelections: makeEmptySelections(),
+  panelScores: [0, 0, 0, 0],
   finalVerdict: "",
 };
 
@@ -36,58 +38,52 @@ const GameContext = createContext<GameContextValue | null>(null);
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
 
-  const goToSetup = () => {
-    setState((s) => ({ ...s, phase: "setup" }));
-  };
+  const goToSetup = () => setState((s) => ({ ...s, phase: "setup" }));
 
-  const setSquadName = (name: string) => {
-    setState((s) => ({ ...s, squadName: name }));
-  };
+  const setSquadName = (name: string) => setState((s) => ({ ...s, squadName: name }));
 
-  const setDetective = (index: number, name: string) => {
+  const setDetective = (index: number, name: string) =>
     setState((s) => {
       const detectives = [...s.detectives];
       detectives[index] = { ...detectives[index], name };
       return { ...s, detectives };
     });
-  };
 
-  const startGame = () => {
+  const startGame = () =>
     setState((s) => ({ ...s, phase: "individual", currentPanel: 0 }));
-  };
 
-  const submitPanelAnswer = (answer: string): boolean => {
-    const clue = CLUES[state.currentPanel];
-    const correct =
-      answer.toLowerCase().trim().includes(clue.ans.toLowerCase());
-    const panelAnswers = [...state.panelAnswers];
-    const panelCorrect = [...state.panelCorrect];
-    panelAnswers[state.currentPanel] = answer;
-    panelCorrect[state.currentPanel] = correct;
-    setState((s) => ({ ...s, panelAnswers, panelCorrect }));
-    return correct;
-  };
-
-  const nextPanel = () => {
+  const selectAnswer = (panelIndex: number, questionIndex: number, key: "A" | "B" | "C") => {
     setState((s) => {
-      if (s.currentPanel >= 3) {
-        return { ...s, phase: "collaboration" };
-      }
-      return { ...s, currentPanel: s.currentPanel + 1 };
+      const panelSelections = s.panelSelections.map((p) => [...p]);
+      panelSelections[panelIndex] = [...panelSelections[panelIndex]];
+      panelSelections[panelIndex][questionIndex] = key;
+      return { ...s, panelSelections };
     });
   };
 
-  const setFinalVerdict = (verdict: string) => {
+  const submitPanel = () => {
+    setState((s) => {
+      const clue = CLUES[s.currentPanel];
+      const selections = s.panelSelections[s.currentPanel];
+      const score = clue.questions.reduce((acc, q, i) => {
+        return acc + (selections[i] === q.ans ? 1 : 0);
+      }, 0);
+      const panelScores = [...s.panelScores];
+      panelScores[s.currentPanel] = score;
+      const nextPanel = s.currentPanel + 1;
+      if (nextPanel >= CLUES.length) {
+        return { ...s, panelScores, phase: "collaboration" };
+      }
+      return { ...s, panelScores, currentPanel: nextPanel };
+    });
+  };
+
+  const setFinalVerdict = (verdict: string) =>
     setState((s) => ({ ...s, finalVerdict: verdict }));
-  };
 
-  const submitVerdict = () => {
-    setState((s) => ({ ...s, phase: "ending" }));
-  };
+  const submitVerdict = () => setState((s) => ({ ...s, phase: "ending" }));
 
-  const resetGame = () => {
-    setState(initialState);
-  };
+  const resetGame = () => setState(initialState);
 
   return (
     <GameContext.Provider
@@ -97,8 +93,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setSquadName,
         setDetective,
         startGame,
-        submitPanelAnswer,
-        nextPanel,
+        selectAnswer,
+        submitPanel,
         setFinalVerdict,
         submitVerdict,
         resetGame,
