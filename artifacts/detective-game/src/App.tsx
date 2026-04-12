@@ -2,6 +2,7 @@ import { useState } from "react";
 import { GameProvider, useGame } from "@/game/GameContext";
 import IntroScreen from "@/pages/IntroScreen";
 import TitleScreen from "@/pages/TitleScreen";
+import CaseSelectScreen from "@/pages/CaseSelectScreen";
 import JoinScreen from "@/pages/JoinScreen";
 import WaitingJoinScreen from "@/pages/WaitingJoinScreen";
 import IndividualPanel from "@/pages/IndividualPanel";
@@ -14,7 +15,7 @@ import LeaderboardScreen from "@/pages/LeaderboardScreen";
 function ExitButton() {
   const { state, resetGame } = useGame();
   const [confirming, setConfirming] = useState(false);
-  if (state.phase === "intro" || state.phase === "title" || state.phase === "leaderboard") return null;
+  if (state.phase === "intro" || state.phase === "title" || state.phase === "case_select" || state.phase === "leaderboard") return null;
   return (
     <div className="fixed top-4 right-4 z-[100] flex items-center gap-2">
       {confirming ? (
@@ -50,7 +51,8 @@ function GameRouter() {
   const { state, goToJoin, setPhase } = useGame();
   switch (state.phase) {
     case "intro":        return <IntroScreen onFinish={() => setPhase("title")} />;
-    case "title":        return <TitleScreen onStart={goToJoin} onTeacherView={() => setPhase("leaderboard")} />;
+    case "title":        return <TitleScreen onStart={() => setPhase("case_select")} onTeacherView={() => setPhase("leaderboard")} />;
+    case "case_select":  return <CaseSelectScreen />;
     case "leaderboard":  return <LeaderboardScreen onBack={() => setPhase("title")} />;
     case "join":         return <JoinScreen />;
     case "waiting_join": return <WaitingJoinScreen />;

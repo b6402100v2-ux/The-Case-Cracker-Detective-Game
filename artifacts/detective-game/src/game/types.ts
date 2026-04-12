@@ -1,6 +1,7 @@
 export type GamePhase =
   | "intro"
   | "title"
+  | "case_select"
   | "join"
   | "waiting_join"
   | "individual"
