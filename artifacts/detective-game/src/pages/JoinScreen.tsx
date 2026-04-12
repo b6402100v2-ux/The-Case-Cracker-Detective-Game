@@ -2,6 +2,14 @@ import { useState } from "react";
 import { useGame } from "@/game/GameContext";
 import { TEAM_ICONS, CLUES } from "@/game/types";
 
+const ICON_NAMES: Record<string, string> = {
+  "🔍": "TRACKERS", "⚡": "BOLTS", "🎯": "SNIPERS", "🦊": "FOXES",
+  "🐉": "DRAGONS", "🦁": "LIONS", "🌟": "STARS", "🔥": "FLAMES",
+};
+
+const RED = "hsl(354 78% 40%)";
+const BLUE = "hsl(210 80% 35%)";
+
 const TOP_BAR = (
   <div className="fixed top-0 left-0 right-0 flex h-3 z-50">
     <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
@@ -10,6 +18,22 @@ const TOP_BAR = (
     <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
   </div>
 );
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="font-black text-base uppercase tracking-wide mb-0.5" style={{ color: RED, fontFamily: "'Bangers', cursive", fontSize: "1.05rem" }}>
+      {children}
+    </p>
+  );
+}
+
+function FieldDesc({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="font-mono text-xs italic mb-2" style={{ color: "hsl(0 0% 28%)" }}>
+      {children}
+    </p>
+  );
+}
 
 export default function JoinScreen() {
   const { checkAvailability, joinRoom } = useGame();
@@ -23,21 +47,11 @@ export default function JoinScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const panelColors = [
-    "hsl(354 78% 44%)",
-    "hsl(210 80% 40%)",
-    "hsl(48 100% 40%)",
-    "hsl(354 78% 44%)",
-  ];
-  const panelBg = [
-    "hsl(354 78% 96%)",
-    "hsl(210 80% 95%)",
-    "hsl(48 100% 92%)",
-    "hsl(354 78% 96%)",
-  ];
+  const panelColors = [RED, BLUE, "hsl(48 85% 35%)", RED];
+  const panelBg = ["hsl(354 78% 96%)", "hsl(210 80% 95%)", "hsl(48 100% 92%)", "hsl(354 78% 96%)"];
 
   const handleFindSquad = async () => {
-    if (!codeName.trim()) { setError("Enter a team code name."); return; }
+    if (!codeName.trim()) { setError("Enter a squad code name."); return; }
     if (!icon) { setError("Pick a team icon."); return; }
     if (!studentName.trim()) { setError("Enter your detective name."); return; }
     setError("");
@@ -65,64 +79,19 @@ export default function JoinScreen() {
 
       {step === "info" ? (
         <div className="comic-panel bg-card max-w-md w-full overflow-hidden">
-          <div className="border-b-4 border-foreground px-5 py-3 text-center" style={{ background: "hsl(354 78% 44%)" }}>
-            <p className="font-mono text-xs tracking-widest text-white/70 uppercase">The Case Crackers</p>
+          <div className="border-b-4 border-foreground px-5 py-3 text-center" style={{ background: RED }}>
+            <p className="font-mono text-xs tracking-widest text-white/80 uppercase mb-0.5">The Case Crackers · Case #101</p>
             <h2 className="text-3xl font-black text-white tracking-widest" style={{ fontFamily: "'Bangers', cursive" }}>
               JOIN YOUR SQUAD
             </h2>
           </div>
 
           <div className="p-5 space-y-5">
-            <div className="border-2 border-foreground/20 bg-muted px-4 py-3 font-mono text-xs leading-relaxed text-muted-foreground">
-              <p className="font-black text-foreground mb-1 uppercase tracking-widest text-xs">How it works:</p>
-              <p>All squad members use the <strong>same code name + icon</strong>. Each detective chooses a different diary to investigate.</p>
-            </div>
 
+            {/* Detective Name */}
             <div>
-              <label className="block font-mono text-xs font-black tracking-widest uppercase mb-1.5" style={{ color: "hsl(354 78% 44%)" }}>
-                Team Code Name
-              </label>
-              <input
-                className="comic-input"
-                placeholder="e.g. ALPHA SQUAD"
-                value={codeName}
-                onChange={(e) => setCodeName(e.target.value)}
-                maxLength={30}
-                onKeyDown={(e) => e.key === "Enter" && handleFindSquad()}
-              />
-            </div>
-
-            <div>
-              <label className="block font-mono text-xs font-black tracking-widest uppercase mb-1.5" style={{ color: "hsl(354 78% 44%)" }}>
-                Team Icon
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                {TEAM_ICONS.map((ic) => (
-                  <button
-                    key={ic}
-                    onClick={() => setIcon(ic)}
-                    className="border-4 py-2 text-2xl text-center transition-all duration-100 hover:scale-110 active:scale-95"
-                    style={
-                      icon === ic
-                        ? { borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)" }
-                        : { borderColor: "hsl(0 0% 80%)", background: "white" }
-                    }
-                  >
-                    {ic}
-                  </button>
-                ))}
-              </div>
-              {icon && (
-                <p className="font-mono text-xs text-muted-foreground mt-1.5 text-center">
-                  Selected: <strong>{icon}</strong> — every teammate must pick this same icon!
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block font-mono text-xs font-black tracking-widest uppercase mb-1.5" style={{ color: "hsl(354 78% 44%)" }}>
-                Your Detective Name
-              </label>
+              <FieldLabel>Your Detective Name</FieldLabel>
+              <FieldDesc>This is your unique alias on the case. Only you have this name.</FieldDesc>
               <input
                 className="comic-input"
                 placeholder="e.g. Detective Rivera"
@@ -133,22 +102,76 @@ export default function JoinScreen() {
               />
             </div>
 
-            {error && <p className="font-mono text-sm font-bold" style={{ color: "hsl(354 78% 44%)" }}>✗ {error}</p>}
+            {/* Squad Code Name */}
+            <div>
+              <FieldLabel>Squad Code Name</FieldLabel>
+              <FieldDesc>Use the same squad name as your teammates to join the same session.</FieldDesc>
+              <input
+                className="comic-input"
+                placeholder="e.g. ALPHA SQUAD"
+                value={codeName}
+                onChange={(e) => setCodeName(e.target.value)}
+                maxLength={30}
+                onKeyDown={(e) => e.key === "Enter" && handleFindSquad()}
+              />
+            </div>
 
-            <button
-              onClick={handleFindSquad}
-              disabled={loading}
-              className="comic-panel w-full text-white py-4 text-xl font-black tracking-widest uppercase transition-all duration-100 hover:translate-x-0.5 hover:translate-y-0.5 active:scale-95 disabled:opacity-60"
-              style={{ background: "hsl(354 78% 44%)", boxShadow: "5px 5px 0 hsl(354 78% 28%)" }}
-            >
-              {loading ? "CHECKING..." : "FIND SQUAD →"}
-            </button>
+            {/* Team Icon */}
+            <div>
+              <FieldLabel>Team Icon</FieldLabel>
+              <FieldDesc>Pick the same icon as your teammates to be on the same team.</FieldDesc>
+              <div className="grid grid-cols-4 gap-2">
+                {TEAM_ICONS.map((ic) => {
+                  const selected = icon === ic;
+                  return (
+                    <button
+                      key={ic}
+                      onClick={() => setIcon(ic)}
+                      className="border-4 py-2.5 flex flex-col items-center gap-1 transition-all duration-100 hover:scale-105 active:scale-95"
+                      style={selected
+                        ? { borderColor: "hsl(0 0% 10%)", background: "hsl(0 0% 10%)", color: "white" }
+                        : { borderColor: "hsl(0 0% 70%)", background: "white" }}
+                    >
+                      <span className="text-2xl leading-none">{ic}</span>
+                      <span className="font-black text-[9px] tracking-widest uppercase" style={{ color: selected ? "white" : "hsl(0 0% 30%)", fontFamily: "'Bangers', cursive", fontSize: "0.6rem" }}>
+                        {ICON_NAMES[ic] ?? ic}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {icon && (
+                <p className="font-mono text-xs mt-2 font-bold" style={{ color: "hsl(0 0% 20%)" }}>
+                  Selected: {icon} {ICON_NAMES[icon]} — every teammate must pick this same icon!
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <p className="font-mono text-sm font-bold border-l-4 pl-3 py-1" style={{ color: RED, borderColor: RED }}>
+                ✗ {error}
+              </p>
+            )}
+
+            <div>
+              <button
+                onClick={handleFindSquad}
+                disabled={loading}
+                className="comic-panel w-full text-white py-4 text-xl font-black tracking-widest uppercase transition-all duration-100 hover:translate-x-0.5 hover:translate-y-0.5 active:scale-95 disabled:opacity-60"
+                style={{ background: RED, boxShadow: "5px 5px 0 hsl(354 78% 25%)" }}
+              >
+                {loading ? "CHECKING..." : "FIND SQUAD →"}
+              </button>
+              <p className="font-mono text-xs italic text-center mt-1.5" style={{ color: "hsl(0 0% 38%)" }}>
+                This connects you to your teammates and shows available panels.
+              </p>
+            </div>
           </div>
         </div>
       ) : (
         <div className="comic-panel bg-card max-w-xl w-full overflow-hidden">
-          <div className="border-b-4 border-foreground px-5 py-3 text-center" style={{ background: "hsl(210 80% 40%)" }}>
-            <p className="font-mono text-xs tracking-widest text-white/70 uppercase">
+          <div className="border-b-4 border-foreground px-5 py-3 text-center" style={{ background: BLUE }}>
+            <p className="font-mono text-xs tracking-widest text-white/80 uppercase mb-0.5">
               Squad: {icon} {codeName.toUpperCase()} · Detective: {studentName}
             </p>
             <h2 className="text-3xl font-black text-white tracking-widest" style={{ fontFamily: "'Bangers', cursive" }}>
@@ -157,9 +180,10 @@ export default function JoinScreen() {
           </div>
 
           <div className="p-5 space-y-4">
-            <p className="font-mono text-xs text-muted-foreground text-center tracking-widest uppercase">
-              Select the diary entry you will investigate — each detective gets a different one
-            </p>
+            <div>
+              <FieldLabel>Investigation Panel</FieldLabel>
+              <FieldDesc>Each detective investigates a different diary. Pick one that hasn't been claimed yet by a teammate.</FieldDesc>
+            </div>
 
             <div className="grid grid-cols-1 gap-3">
               {CLUES.map((clue, i) => {
@@ -170,29 +194,29 @@ export default function JoinScreen() {
                     key={i}
                     disabled={taken}
                     onClick={() => !taken && setSelectedPanel(i)}
-                    className={`border-4 p-4 text-left transition-all duration-100 ${taken ? "opacity-40 cursor-not-allowed" : "hover:translate-x-0.5 cursor-pointer"} ${selected ? "scale-[1.01]" : ""}`}
+                    className={`border-4 p-4 text-left transition-all duration-100 ${taken ? "opacity-40 cursor-not-allowed" : "hover:translate-x-0.5 cursor-pointer"}`}
                     style={
                       selected
                         ? { borderColor: panelColors[i], background: panelBg[i] }
                         : taken
-                        ? { borderColor: "hsl(0 0% 70%)", background: "hsl(0 0% 96%)" }
-                        : { borderColor: "hsl(0 0% 80%)", background: "white" }
+                        ? { borderColor: "hsl(0 0% 75%)", background: "hsl(0 0% 96%)" }
+                        : { borderColor: "hsl(0 0% 75%)", background: "white" }
                     }
                   >
                     <div className="flex items-start gap-4">
                       <div
                         className="border-2 border-foreground rounded-none px-2 py-1 text-2xl shrink-0"
-                        style={{ background: taken ? "hsl(0 0% 85%)" : panelBg[i] }}
+                        style={{ background: taken ? "hsl(0 0% 88%)" : panelBg[i] }}
                       >
                         {clue.icon}
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-black text-base" style={{ color: taken ? "hsl(0 0% 55%)" : panelColors[i], fontFamily: "'Bangers', cursive" }}>
+                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                          <span className="font-black text-base" style={{ color: taken ? "hsl(0 0% 50%)" : panelColors[i], fontFamily: "'Bangers', cursive" }}>
                             PANEL {i + 1}
                           </span>
                           {taken && (
-                            <span className="font-mono text-xs border border-current px-1.5 py-0.5" style={{ color: "hsl(0 0% 55%)" }}>
+                            <span className="font-mono text-xs border border-current px-1.5 py-0.5 font-black" style={{ color: "hsl(0 0% 50%)" }}>
                               CLAIMED
                             </span>
                           )}
@@ -202,8 +226,8 @@ export default function JoinScreen() {
                             </span>
                           )}
                         </div>
-                        <p className="font-black text-sm text-foreground">{clue.date}: {clue.loc}</p>
-                        <p className="font-mono text-xs text-muted-foreground">{clue.domain}</p>
+                        <p className="font-black text-sm" style={{ color: "hsl(0 0% 10%)" }}>{clue.date}: {clue.loc}</p>
+                        <p className="font-mono text-xs italic" style={{ color: "hsl(0 0% 35%)" }}>{clue.domain}</p>
                       </div>
                     </div>
                   </button>
@@ -211,7 +235,11 @@ export default function JoinScreen() {
               })}
             </div>
 
-            {error && <p className="font-mono text-sm font-bold" style={{ color: "hsl(354 78% 44%)" }}>✗ {error}</p>}
+            {error && (
+              <p className="font-mono text-sm font-bold border-l-4 pl-3 py-1" style={{ color: RED, borderColor: RED }}>
+                ✗ {error}
+              </p>
+            )}
 
             <div className="flex gap-3">
               <button
@@ -220,14 +248,21 @@ export default function JoinScreen() {
               >
                 ← BACK
               </button>
-              <button
-                onClick={handleJoin}
-                disabled={loading || selectedPanel === null}
-                className="comic-panel flex-1 text-white py-3 text-lg font-black tracking-widest uppercase transition-all duration-100 hover:translate-x-0.5 hover:translate-y-0.5 active:scale-95 disabled:opacity-50"
-                style={{ background: "hsl(354 78% 44%)", boxShadow: "4px 4px 0 hsl(354 78% 28%)" }}
-              >
-                {loading ? "JOINING..." : selectedPanel !== null ? `CLAIM PANEL ${selectedPanel + 1} →` : "SELECT A FILE FIRST"}
-              </button>
+              <div className="flex-1">
+                <button
+                  onClick={handleJoin}
+                  disabled={loading || selectedPanel === null}
+                  className="comic-panel w-full text-white py-3 text-lg font-black tracking-widest uppercase transition-all duration-100 hover:translate-x-0.5 hover:translate-y-0.5 active:scale-95 disabled:opacity-50"
+                  style={{ background: RED, boxShadow: "4px 4px 0 hsl(354 78% 25%)" }}
+                >
+                  {loading ? "JOINING..." : selectedPanel !== null ? `CLAIM PANEL ${selectedPanel + 1} →` : "SELECT A FILE FIRST"}
+                </button>
+                <p className="font-mono text-xs italic text-center mt-1.5" style={{ color: "hsl(0 0% 38%)" }}>
+                  {selectedPanel !== null
+                    ? `You will investigate: ${CLUES[selectedPanel].date} — ${CLUES[selectedPanel].loc}`
+                    : "Tap a panel above, then press this button to lock it in."}
+                </p>
+              </div>
             </div>
           </div>
         </div>

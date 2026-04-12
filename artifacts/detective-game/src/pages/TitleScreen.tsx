@@ -42,8 +42,8 @@ export default function TitleScreen({ onStart, onTeacherView }: TitleScreenProps
 
         <div className="p-6 text-center bg-card">
           <div className="mb-4">
-            <div className="inline-block px-5 py-2 skew-heading border-4 border-foreground" style={{ background: "hsl(48 100% 50%)" }}>
-              <span className="text-base font-black tracking-[0.2em] text-foreground uppercase">
+            <div className="inline-block px-6 py-3 skew-heading border-4 border-foreground" style={{ background: "hsl(48 100% 50%)" }}>
+              <span className="text-2xl font-black tracking-[0.15em] text-foreground uppercase" style={{ fontFamily: "'Bangers', cursive", letterSpacing: "0.12em" }}>
                 THE CASE CRACKERS
               </span>
             </div>
