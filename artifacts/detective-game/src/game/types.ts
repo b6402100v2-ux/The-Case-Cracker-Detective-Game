@@ -1,4 +1,5 @@
 export type GamePhase =
+  | "intro"
   | "title"
   | "join"
   | "waiting_join"

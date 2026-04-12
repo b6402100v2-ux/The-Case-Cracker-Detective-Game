@@ -52,7 +52,7 @@ interface GameContextValue {
 }
 
 const initialState: GameState = {
-  phase: "title",
+  phase: "intro",
   roomId: "",
   panelIndex: 0,
   studentName: "",
