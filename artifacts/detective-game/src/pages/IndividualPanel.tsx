@@ -23,6 +23,7 @@ export default function IndividualPanel() {
   const [showHint, setShowHint] = useState<boolean[]>(clue.questions.map(() => false));
   const [hasBadge, setHasBadge] = useState(false);
   const [proceeding, setProceeding] = useState(false);
+  const [showTip, setShowTip] = useState(true);
 
   const allCorrect = lockedCorrect.every(Boolean);
   const canProceed = allCorrect || timerExpired;
@@ -96,6 +97,57 @@ export default function IndividualPanel() {
 
   return (
     <div className="min-h-screen halftone-bg flex flex-col items-center py-5 px-4">
+      {/* Main Idea Tip Modal */}
+      {showTip && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
+          <div className="comic-panel bg-card max-w-sm w-full overflow-hidden" style={{ border: "4px solid hsl(0 0% 10%)" }}>
+            {/* Header */}
+            <div className="border-b-4 border-foreground px-5 py-3 text-center" style={{ background: "hsl(354 78% 44%)" }}>
+              <p className="font-mono text-xs text-white/75 uppercase tracking-widest">Detective Strategy</p>
+              <h2 className="text-3xl font-black text-white tracking-widest leading-none" style={{ fontFamily: "'Bangers', cursive" }}>
+                🔍 FIND THE MAIN IDEA
+              </h2>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="font-mono text-sm leading-relaxed text-foreground">
+                Before answering, read Maya's diary entry once all the way through. Then ask yourself:
+              </p>
+
+              <div className="space-y-2">
+                {[
+                  { icon: "❓", tip: "What is this mostly about?", sub: "One sentence that covers the whole entry, not just one detail." },
+                  { icon: "📌", tip: "What keeps coming back?", sub: "Repeated words, feelings, or events are clues to the main idea." },
+                  { icon: "🚫", tip: "Ignore small details first.", sub: "Dates, names, and single events support the main idea — they are not it." },
+                ].map(({ icon, tip, sub }) => (
+                  <div key={tip} className="flex gap-3 items-start border-2 border-foreground/10 bg-muted px-3 py-2">
+                    <span className="text-lg shrink-0 mt-0.5">{icon}</span>
+                    <div>
+                      <p className="font-black text-sm text-foreground">{tip}</p>
+                      <p className="font-mono text-xs italic text-muted-foreground">{sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-4 border-foreground px-4 py-2 text-center" style={{ background: "hsl(48 100% 50%)" }}>
+                <p className="font-mono text-xs font-black tracking-widest uppercase" style={{ color: "hsl(0 0% 10%)" }}>
+                  💡 The questions test whether you found the main idea — not just random facts.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowTip(false)}
+                className="comic-panel w-full py-3 text-lg font-black tracking-widest uppercase text-white hover:translate-x-0.5 hover:translate-y-0.5 transition-all active:scale-95"
+                style={{ background: "hsl(354 78% 44%)", boxShadow: "4px 4px 0 hsl(354 78% 28%)" }}
+              >
+                GOT IT — START INVESTIGATING →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="fixed top-0 left-0 right-0 flex h-3 z-50">
         <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
         <div className="flex-1" style={{ background: "hsl(210 80% 40%)" }} />
