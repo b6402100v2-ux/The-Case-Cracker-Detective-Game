@@ -66,6 +66,30 @@ uri = "file://artifacts/julias-diary-intro/public/images/detective_badge.png"
 type = "image"
 title = "Detective badge"
 
+[[generated]]
+id = "POPoPOAPM0hQGXO6nIX8B"
+uri = "file://artifacts/lina-case-ending/public/images/courtroom_gavel.png"
+type = "image"
+title = "Comic book style courtroom gavel"
+
+[[generated]]
+id = "lQll5H4gtlogYVQBVkSLK"
+uri = "file://artifacts/lina-case-ending/public/images/cyberbullying_symbols.png"
+type = "image"
+title = "Cyberbullying abstract symbols"
+
+[[generated]]
+id = "i3VkQeS4W939ZpEvZzrRp"
+uri = "file://artifacts/lina-case-ending/public/images/detective_badge.png"
+type = "image"
+title = "Detective badge comic style"
+
+[[generated]]
+id = "nEhI8Y7XIDtHOzOnTNfWV"
+uri = "file://artifacts/lina-case-ending/public/images/comic_elements.png"
+type = "image"
+title = "Comic burst POW elements"
+
 [[outputs]]
 id = "rx2NlsnACggQK8GrZBGn9"
 uri = "file://artifacts/detective-game/public/diary-panel-1.png"

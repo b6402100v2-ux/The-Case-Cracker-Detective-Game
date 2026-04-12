@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #CC0000;
+  --color-secondary: #003399;
+  --color-accent: #FFD700;
+
+  --color-bg-light: #FFFFFF;
+  --color-bg-dark: #0A0A0A;
+  --color-bg-muted: #1A1A1A;
+
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #FFD700;
+  --color-text-muted: #9CA3AF;
+  --color-text-inverse: #0A0A0A;
+
+  --font-display: 'Bangers', system-ui;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: monospace;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-bg-light: var(--color-bg-light);
+  --color-bg-dark: var(--color-bg-dark);
+  --color-bg-muted: var(--color-bg-muted);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-inverse: var(--color-text-inverse);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary);
+}
+
+.text-stroke {
+  -webkit-text-stroke: 2px #000;
+}
+
+.text-stroke-thick {
+  -webkit-text-stroke: 4px #000;
+}
+
+.comic-shadow {
+  filter: drop-shadow(4px 4px 0px #000);
+}
