@@ -6,7 +6,8 @@ export type GamePhase =
   | "waiting_submit"
   | "collaboration"
   | "verdict"
-  | "ending";
+  | "ending"
+  | "leaderboard";
 
 export interface MCQuestion {
   q: string;

@@ -2,6 +2,59 @@ import { useState, useEffect } from "react";
 import { useGame, type RoomStatus } from "@/game/GameContext";
 import { CLUES, VERDICT_OPTIONS, CORRECT_VERDICT_KEY } from "@/game/types";
 
+function StarBurst({ count }: { count: number }) {
+  return (
+    <div className="flex justify-center gap-1 flex-wrap my-1">
+      {Array.from({ length: count }).map((_, i) => (
+        <span key={i} className="text-2xl stamp-in" style={{ animationDelay: `${i * 80}ms` }}>⭐</span>
+      ))}
+    </div>
+  );
+}
+
+function getRating(total: number) {
+  if (total >= 7) return {
+    label: "GREAT DETECTIVES",
+    trophy: "🏆",
+    color: "hsl(48 100% 40%)",
+    bg: "hsl(48 100% 50%)",
+    textColor: "hsl(0 0% 10%)",
+    compliment: "Outstanding! Your squad cracked the case with flying colours. You are true champions of justice!",
+    celebrate: true,
+    stars: total,
+  };
+  if (total >= 4) return {
+    label: "GOOD INVESTIGATORS",
+    trophy: "🥈",
+    color: "hsl(210 80% 40%)",
+    bg: "hsl(210 80% 95%)",
+    textColor: "hsl(210 80% 25%)",
+    compliment: "Well done! Your squad worked together and uncovered important evidence. Keep honing your detective skills!",
+    celebrate: false,
+    stars: total,
+  };
+  if (total >= 1) return {
+    label: "FIELD AGENTS IN TRAINING",
+    trophy: "🥉",
+    color: "hsl(354 78% 44%)",
+    bg: "hsl(354 78% 96%)",
+    textColor: "hsl(354 78% 28%)",
+    compliment: "Good effort! Every great detective starts somewhere. Re-read the diaries and you'll see what you missed!",
+    celebrate: false,
+    stars: total,
+  };
+  return {
+    label: "ROOKIE SQUAD",
+    trophy: "🔰",
+    color: "hsl(0 0% 50%)",
+    bg: "hsl(0 0% 96%)",
+    textColor: "hsl(0 0% 25%)",
+    compliment: "Don't give up! The case is complex, and the best detectives keep coming back with fresh eyes. Try again!",
+    celebrate: false,
+    stars: 0,
+  };
+}
+
 export default function EndingScreen() {
   const { state, fetchRoomStatus, resetGame } = useGame();
   const [roomStatus, setRoomStatus] = useState<RoomStatus | null>(null);
@@ -29,12 +82,7 @@ export default function EndingScreen() {
 
   const individualBadgeCount = panelBadges.filter(Boolean).length;
   const totalBadges = individualBadgeCount + teamBadges;
-
-  const overallRating =
-    totalBadges >= 8 ? { label: "LEGENDARY SQUAD 🥇", color: "hsl(48 100% 45%)", textColor: "hsl(0 0% 10%)" } :
-    totalBadges >= 6 ? { label: "ELITE DETECTIVES 🥈", color: "hsl(210 80% 40%)", textColor: "white" } :
-    totalBadges >= 3 ? { label: "FIELD AGENTS 🥉", color: "hsl(354 78% 44%)", textColor: "white" } :
-    { label: "ROOKIE SQUAD", color: "hsl(0 0% 55%)", textColor: "white" };
+  const rating = getRating(totalBadges);
 
   return (
     <div className="min-h-screen halftone-bg flex flex-col items-center py-6 px-4 relative overflow-hidden">
@@ -45,33 +93,52 @@ export default function EndingScreen() {
         <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
       </div>
 
-      <div className="fixed top-8 left-4 sfx-burst text-xs opacity-40 font-black" style={{ background: "hsl(210 80% 40%)", color: "white" }}>CASE CLOSED!</div>
-      <div className="fixed bottom-10 right-4 sfx-burst text-xs opacity-40 font-black" style={{ background: "hsl(354 78% 44%)", color: "white" }}>SOLVED!</div>
+      {/* Celebration decorations for Great Detectives */}
+      {rating.celebrate && show.scores && (
+        <>
+          <div className="fixed top-8 left-4 sfx-burst text-sm opacity-60 font-black stamp-in" style={{ background: "hsl(354 78% 44%)", color: "white" }}>CASE CLOSED!</div>
+          <div className="fixed top-12 right-4 sfx-burst text-sm opacity-60 font-black stamp-in" style={{ background: "hsl(210 80% 40%)", color: "white", animationDelay: "200ms" }}>SOLVED!</div>
+          <div className="fixed bottom-12 left-6 sfx-burst text-xs opacity-50 font-black stamp-in" style={{ background: "hsl(48 100% 50%)", color: "hsl(0 0% 10%)", animationDelay: "400ms" }}>AMAZING!</div>
+          <div className="fixed bottom-20 right-6 sfx-burst text-xs opacity-50 font-black stamp-in" style={{ background: "hsl(354 78% 44%)", color: "white", animationDelay: "600ms" }}>WOW!</div>
+        </>
+      )}
 
       <div className="comic-panel bg-card max-w-xl w-full overflow-hidden mt-6">
-        {/* Header */}
-        <div className="border-b-4 border-foreground px-6 py-4 text-center" style={{ background: "hsl(354 78% 44%)" }}>
-          <div className={`inline-block sfx-burst text-xl mb-2 font-black ${show.scores ? "stamp-in" : "opacity-0"}`}
-            style={{ background: overallRating.color, color: overallRating.textColor }}>
-            CASE CLOSED
+        {/* Header — gold for Great Detectives */}
+        <div className="border-b-4 border-foreground px-6 py-5 text-center" style={{ background: rating.celebrate ? "hsl(48 100% 50%)" : "hsl(354 78% 44%)" }}>
+          {show.scores && (
+            <div className={`text-5xl mb-1 stamp-in`}>{rating.trophy}</div>
+          )}
+          <div className={`inline-block sfx-burst text-sm mb-2 font-black transition-all duration-500 ${show.scores ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
+            style={{ background: rating.celebrate ? "hsl(354 78% 44%)" : "hsl(48 100% 50%)", color: rating.celebrate ? "white" : "hsl(0 0% 10%)" }}>
+            {rating.celebrate ? "CASE CLOSED!" : "MISSION COMPLETE"}
           </div>
           <div className="flex items-center justify-center gap-3">
             <span className="text-2xl">{state.icon}</span>
-            <h2 className="text-3xl font-black text-white tracking-widest" style={{ fontFamily: "'Bangers', cursive" }}>
+            <h2 className="text-3xl font-black text-foreground tracking-widest" style={{ fontFamily: "'Bangers', cursive" }}>
               {state.codeName}
             </h2>
           </div>
         </div>
 
         <div className="p-6 space-y-5">
-          {/* Overall rating */}
+          {/* Rating banner */}
           <div className={`text-center transition-all duration-700 ${show.scores ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
-            <div className="inline-block border-4 px-6 py-2 text-2xl font-black tracking-widest rotate-[-3deg] mb-2"
-              style={{ borderColor: overallRating.color, color: overallRating.color, fontFamily: "'Bangers', cursive" }}>
-              {overallRating.label}
+            <div className="border-4 px-6 py-3 inline-block mb-2"
+              style={{ borderColor: rating.color, background: rating.bg, transform: "rotate(-2deg)" }}>
+              <p className="text-2xl font-black tracking-widest" style={{ color: rating.textColor, fontFamily: "'Bangers', cursive" }}>
+                {rating.trophy} {rating.label}
+              </p>
             </div>
-            <p className="font-mono text-sm text-muted-foreground">
-              Total badges: <strong>{totalBadges}</strong> ({individualBadgeCount} investigation + {teamBadges} verdict)
+
+            {/* Celebration stars for 7-9 badges */}
+            {rating.celebrate && <StarBurst count={Math.min(totalBadges, 9)} />}
+
+            <p className="font-mono text-sm text-muted-foreground mt-2 max-w-sm mx-auto">{rating.compliment}</p>
+
+            <p className="font-mono text-xs text-muted-foreground mt-2">
+              Total badges: <strong>{totalBadges}/9</strong>
+              <span className="ml-2 text-muted-foreground/60">({individualBadgeCount} investigation + {teamBadges} verdict)</span>
             </p>
           </div>
 
@@ -129,7 +196,7 @@ export default function EndingScreen() {
                     <p className="font-mono text-sm mt-1">
                       {VERDICT_OPTIONS.find(o => o.key === agreedKey)?.text}
                     </p>
-                    <div className="flex gap-1 mt-2 text-xl">
+                    <div className="flex gap-1 mt-2 text-xl flex-wrap">
                       {Array.from({ length: teamBadges }).map((_, i) => <span key={i}>🏆</span>)}
                       <span className="font-black ml-2" style={{ color: "hsl(48 100% 40%)" }}>{teamBadges} badges</span>
                     </div>
@@ -140,7 +207,7 @@ export default function EndingScreen() {
                       ✗ VERDICT MISSED — No badges
                     </p>
                     <p className="font-mono text-sm mt-1 text-muted-foreground">
-                      The correct answer: <strong>B) {VERDICT_OPTIONS.find(o => o.key === CORRECT_VERDICT_KEY)?.text}</strong>
+                      Correct: <strong>B) {VERDICT_OPTIONS.find(o => o.key === CORRECT_VERDICT_KEY)?.text}</strong>
                     </p>
                   </>
                 )}

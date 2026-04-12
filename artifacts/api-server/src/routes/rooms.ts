@@ -203,6 +203,36 @@ router.post("/rooms/:id/vote", (req, res) => {
   res.json({ ok: true });
 });
 
+router.get("/admin/leaderboard", (_req, res) => {
+  const allRooms = Array.from(rooms.values()).map((room) => ({
+    roomId: room.id,
+    codeName: room.codeName,
+    icon: room.icon,
+    memberCount: room.members.length,
+    members: room.members.map((m) => ({
+      studentName: m.studentName,
+      panelIndex: m.panelIndex,
+      score: m.score,
+      hasBadge: m.hasBadge,
+    })),
+    allJoined: room.members.length >= 4,
+    allSubmitted: room.members.length >= 4 && room.members.every((m) => m.score !== null),
+    panelScores: room.members.map((m) => m.score),
+    panelBadges: room.members.map((m) => m.hasBadge),
+    individualBadgeCount: room.members.filter((m) => m.hasBadge).length,
+    assemblyMemberCount: room.assemblyMembers.length,
+    allInAssembly: room.assemblyMembers.length >= 4,
+    voteRoundNumber: room.voteRoundNumber,
+    voteComplete: room.voteComplete,
+    voteCorrect: room.voteCorrect,
+    agreedKey: room.agreedKey,
+    teamBadgesEarned: room.teamBadgesEarned,
+    totalBadges: room.members.filter((m) => m.hasBadge).length + room.teamBadgesEarned,
+    createdAt: room.createdAt,
+  }));
+  res.json({ rooms: allRooms.sort((a, b) => b.totalBadges - a.totalBadges) });
+});
+
 router.post("/rooms/:id/verdict", (req, res) => {
   const room = rooms.get(decodeURIComponent(req.params.id));
   if (!room) { res.status(404).json({ error: "Room not found" }); return; }
