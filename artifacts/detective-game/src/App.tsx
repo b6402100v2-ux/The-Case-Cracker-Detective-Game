@@ -5,28 +5,21 @@ import WaitingJoinScreen from "@/pages/WaitingJoinScreen";
 import IndividualPanel from "@/pages/IndividualPanel";
 import WaitingSubmitScreen from "@/pages/WaitingSubmitScreen";
 import CollaborationScreen from "@/pages/CollaborationScreen";
+import VerdictScreen from "@/pages/VerdictScreen";
 import EndingScreen from "@/pages/EndingScreen";
 
 function GameRouter() {
   const { state, goToJoin } = useGame();
-
   switch (state.phase) {
-    case "title":
-      return <TitleScreen onStart={goToJoin} />;
-    case "join":
-      return <JoinScreen />;
-    case "waiting_join":
-      return <WaitingJoinScreen />;
-    case "individual":
-      return <IndividualPanel />;
-    case "waiting_submit":
-      return <WaitingSubmitScreen />;
-    case "collaboration":
-      return <CollaborationScreen />;
-    case "ending":
-      return <EndingScreen />;
-    default:
-      return <TitleScreen onStart={goToJoin} />;
+    case "title":       return <TitleScreen onStart={goToJoin} />;
+    case "join":        return <JoinScreen />;
+    case "waiting_join": return <WaitingJoinScreen />;
+    case "individual":  return <IndividualPanel />;
+    case "waiting_submit": return <WaitingSubmitScreen />;
+    case "collaboration": return <CollaborationScreen />;
+    case "verdict":     return <VerdictScreen />;
+    case "ending":      return <EndingScreen />;
+    default:            return <TitleScreen onStart={goToJoin} />;
   }
 }
 

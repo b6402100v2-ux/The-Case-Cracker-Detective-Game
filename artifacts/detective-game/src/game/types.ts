@@ -5,6 +5,7 @@ export type GamePhase =
   | "individual"
   | "waiting_submit"
   | "collaboration"
+  | "verdict"
   | "ending";
 
 export interface MCQuestion {
@@ -28,6 +29,20 @@ export interface Clue {
 }
 
 export const TEAM_ICONS = ["🔍", "⚡", "🎯", "🦊", "🐉", "🦁", "🌟", "🔥"];
+
+export const VERDICT_OPTIONS = [
+  { key: "A", text: "Maya was overwhelmed by school pressure and exam stress." },
+  { key: "B", text: "Maya was a victim of cyberbullying — a 'Burn Page' invaded every part of her life." },
+  { key: "C", text: "Maya had a serious conflict with her family that broke her spirit." },
+  { key: "D", text: "Maya's romantic relationship with Leo ended, causing her depression." },
+] as const;
+
+export const CORRECT_VERDICT_KEY = "B";
+
+export const ASSEMBLY_HINTS = [
+  "🔍 HINT 1: The bullies created a 'Burn Page' — a public online thread designed to humiliate Maya. Look at how this spread from the internet into physical spaces: her locker, the bathroom stall, her inbox. It didn't stay digital.",
+  "🔍 HINT 2: Maya writes that 'notifications are a rhythmic, digital heartbeat that has replaced my own.' She felt she had to 'turn off the sound' — which is a metaphor for escaping the relentless, public, coordinated online attack she could not escape.",
+];
 
 export const CLUES: Clue[] = [
   {
@@ -203,7 +218,7 @@ We took a selfie against the moonlight, but as he went to post it, I felt a wave
           { key: "C", text: "A scary movie." },
         ],
         ans: "A",
-        hint: "Read the sentence: 'every time my name is linked to a photo, the 'Comment' section turns into a...' — finish that sentence.",
+        hint: "Read the sentence: 'every time my name is linked to a photo, the Comment section turns into a...' — finish that sentence.",
       },
       {
         q: "How does she feel when Leo kisses her?",

@@ -8,6 +8,11 @@ interface RoomMember {
   hasBadge: boolean;
 }
 
+interface VoteRecord {
+  panelIndex: number;
+  voteKey: string;
+}
+
 interface Room {
   id: string;
   codeName: string;
@@ -15,7 +20,18 @@ interface Room {
   members: RoomMember[];
   verdict: string | null;
   createdAt: number;
+  assemblyMembers: number[];
+  voteRoundNumber: number;
+  roundVotes: VoteRecord[];
+  voteComplete: boolean;
+  voteUnanimous: boolean | null;
+  voteCorrect: boolean | null;
+  agreedKey: string | null;
+  teamBadgesEarned: number;
+  assemblyHintsUsed: number;
 }
+
+const CORRECT_VOTE_KEY = "B";
 
 const rooms = new Map<string, Room>();
 
@@ -56,7 +72,12 @@ router.post("/rooms/join", (req, res) => {
   const key = roomKey(codeName, icon);
   let room = rooms.get(key);
   if (!room) {
-    room = { id: key, codeName: codeName.trim(), icon, members: [], verdict: null, createdAt: Date.now() };
+    room = {
+      id: key, codeName: codeName.trim(), icon, members: [], verdict: null, createdAt: Date.now(),
+      assemblyMembers: [], voteRoundNumber: 1, roundVotes: [],
+      voteComplete: false, voteUnanimous: null, voteCorrect: null, agreedKey: null,
+      teamBadgesEarned: 0, assemblyHintsUsed: 0,
+    };
     rooms.set(key, room);
   }
   if (room.members.length >= 4) {
@@ -77,60 +98,116 @@ router.get("/rooms/:id/status", (req, res) => {
     res.status(404).json({ error: "Room not found" });
     return;
   }
+
+  const myVotesThisRound = (panelIndex: number) =>
+    room.roundVotes.find((v) => v.panelIndex === panelIndex)?.voteKey ?? null;
+
   res.json({
     memberCount: room.members.length,
     members: room.members.map((m) => ({
-      studentName: m.studentName,
-      panelIndex: m.panelIndex,
-      submitted: m.score !== null,
-      hasBadge: m.hasBadge,
+      studentName: m.studentName, panelIndex: m.panelIndex,
+      submitted: m.score !== null, hasBadge: m.hasBadge,
     })),
     allJoined: room.members.length >= 4,
     allSubmitted: room.members.length >= 4 && room.members.every((m) => m.score !== null),
     panelScores: room.members.map((m) => m.score),
     panelBadges: room.members.map((m) => m.hasBadge),
     verdict: room.verdict,
+    assemblyMembers: room.assemblyMembers,
+    allInAssembly: room.assemblyMembers.length >= 4,
+    voteRoundNumber: room.voteRoundNumber,
+    roundVotesCount: room.roundVotes.length,
+    allVotedThisRound: room.roundVotes.length >= 4,
+    voteComplete: room.voteComplete,
+    voteUnanimous: room.voteUnanimous,
+    voteCorrect: room.voteCorrect,
+    agreedKey: room.agreedKey,
+    teamBadgesEarned: room.teamBadgesEarned,
+    assemblyHintsUsed: room.assemblyHintsUsed,
   });
 });
 
 router.post("/rooms/:id/submit", (req, res) => {
   const room = rooms.get(decodeURIComponent(req.params.id));
-  if (!room) {
-    res.status(404).json({ error: "Room not found" });
-    return;
-  }
+  if (!room) { res.status(404).json({ error: "Room not found" }); return; }
   const { panelIndex, score, answers, hasBadge } = req.body as {
-    panelIndex?: number;
-    score?: number;
-    answers?: (string | null)[];
-    hasBadge?: boolean;
+    panelIndex?: number; score?: number; answers?: (string | null)[]; hasBadge?: boolean;
   };
   if (panelIndex === undefined || score === undefined) {
-    res.status(400).json({ error: "panelIndex and score are required" });
-    return;
+    res.status(400).json({ error: "panelIndex and score are required" }); return;
   }
   const member = room.members.find((m) => m.panelIndex === panelIndex);
-  if (!member) {
-    res.status(404).json({ error: "Member not found" });
-    return;
-  }
+  if (!member) { res.status(404).json({ error: "Member not found" }); return; }
   member.score = score;
   member.answers = answers ?? [];
   member.hasBadge = hasBadge ?? false;
   res.json({ ok: true });
 });
 
+router.post("/rooms/:id/assembly-join", (req, res) => {
+  const room = rooms.get(decodeURIComponent(req.params.id));
+  if (!room) { res.status(404).json({ error: "Room not found" }); return; }
+  const { panelIndex } = req.body as { panelIndex?: number };
+  if (panelIndex === undefined) { res.status(400).json({ error: "panelIndex required" }); return; }
+  if (!room.assemblyMembers.includes(panelIndex)) {
+    room.assemblyMembers.push(panelIndex);
+  }
+  res.json({ ok: true, assemblyCount: room.assemblyMembers.length });
+});
+
+router.post("/rooms/:id/request-hint", (req, res) => {
+  const room = rooms.get(decodeURIComponent(req.params.id));
+  if (!room) { res.status(404).json({ error: "Room not found" }); return; }
+  if (room.assemblyHintsUsed >= 2) {
+    res.status(409).json({ error: "No hints remaining." }); return;
+  }
+  room.assemblyHintsUsed += 1;
+  res.json({ ok: true, hintsUsed: room.assemblyHintsUsed });
+});
+
+router.post("/rooms/:id/vote", (req, res) => {
+  const room = rooms.get(decodeURIComponent(req.params.id));
+  if (!room) { res.status(404).json({ error: "Room not found" }); return; }
+  if (room.voteComplete) { res.json({ ok: true, alreadyComplete: true }); return; }
+  const { panelIndex, voteKey } = req.body as { panelIndex?: number; voteKey?: string };
+  if (panelIndex === undefined || !voteKey) {
+    res.status(400).json({ error: "panelIndex and voteKey required" }); return;
+  }
+  const alreadyVoted = room.roundVotes.find((v) => v.panelIndex === panelIndex);
+  if (alreadyVoted) {
+    alreadyVoted.voteKey = voteKey;
+  } else {
+    room.roundVotes.push({ panelIndex, voteKey });
+  }
+  if (room.roundVotes.length >= 4) {
+    const keys = room.roundVotes.map((v) => v.voteKey);
+    const unanimous = keys.every((k) => k === keys[0]);
+    const correct = unanimous && keys[0] === CORRECT_VOTE_KEY;
+    room.voteUnanimous = unanimous;
+    room.voteCorrect = correct;
+    room.agreedKey = unanimous ? keys[0] : null;
+    if (correct) {
+      room.teamBadgesEarned = room.voteRoundNumber === 1 ? 5 : 3;
+      room.voteComplete = true;
+    } else if (room.voteRoundNumber >= 2) {
+      room.teamBadgesEarned = 0;
+      room.voteComplete = true;
+    } else {
+      room.voteRoundNumber += 1;
+      room.roundVotes = [];
+      room.voteUnanimous = null;
+      room.voteCorrect = null;
+      room.agreedKey = null;
+    }
+  }
+  res.json({ ok: true });
+});
+
 router.post("/rooms/:id/verdict", (req, res) => {
   const room = rooms.get(decodeURIComponent(req.params.id));
-  if (!room) {
-    res.status(404).json({ error: "Room not found" });
-    return;
-  }
+  if (!room) { res.status(404).json({ error: "Room not found" }); return; }
   const { verdict } = req.body as { verdict?: string };
-  if (!verdict?.trim()) {
-    res.status(400).json({ error: "verdict is required" });
-    return;
-  }
+  if (!verdict?.trim()) { res.status(400).json({ error: "verdict is required" }); return; }
   room.verdict = verdict.trim();
   res.json({ ok: true });
 });
