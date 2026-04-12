@@ -53,3 +53,9 @@ id = "piPT7XXpL2nRPA-ndCdrw"
 uri = "file://case-crackers-source.zip"
 type = "unspecified"
 title = "Case Crackers – Full Source Code"
+
+[[outputs]]
+id = "Vyx0DqXe1DD-RBcWpksgJ"
+uri = "file://case-crackers-github.zip"
+type = "unspecified"
+title = "Case Crackers – GitHub-Ready Source"
