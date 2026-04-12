@@ -36,6 +36,24 @@ export default function IndividualPanel() {
     setIsPaused(false);
   }, []);
 
+  const pickFemaleVoice = (): SpeechSynthesisVoice | null => {
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoices = voices.filter((v) => v.lang.startsWith("en"));
+    // Prefer known high-quality female voices by name
+    const preferredNames = ["Samantha", "Ava", "Allison", "Susan", "Victoria", "Karen",
+      "Aria", "Zira", "Google US English", "Google UK English Female",
+      "Microsoft Aria", "Microsoft Zira", "Moira", "Tessa", "Fiona"];
+    for (const name of preferredNames) {
+      const match = englishVoices.find((v) => v.name.includes(name));
+      if (match) return match;
+    }
+    // Fallback: any voice whose name suggests female
+    const femaleKeyword = englishVoices.find((v) => /female|woman|girl/i.test(v.name));
+    if (femaleKeyword) return femaleKeyword;
+    // Last resort: first English voice available
+    return englishVoices[0] ?? null;
+  };
+
   const handleListen = useCallback(() => {
     if (isReading && !isPaused) {
       window.speechSynthesis.pause();
@@ -50,8 +68,10 @@ export default function IndividualPanel() {
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(clue.text.replace(/\n\n/g, ". "));
     utt.rate = 0.92;
-    utt.pitch = 1.05;
+    utt.pitch = 1.1;
     utt.lang = "en-US";
+    const femaleVoice = pickFemaleVoice();
+    if (femaleVoice) utt.voice = femaleVoice;
     utt.onstart = () => { setIsReading(true); setIsPaused(false); };
     utt.onend = () => { setIsReading(false); setIsPaused(false); };
     utt.onerror = () => { setIsReading(false); setIsPaused(false); };
