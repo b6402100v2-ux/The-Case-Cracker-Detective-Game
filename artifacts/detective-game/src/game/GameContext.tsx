@@ -30,7 +30,7 @@ interface GameState {
   studentName: string;
   codeName: string;
   icon: string;
-  panelSelections: (("A" | "B" | "C") | null)[];
+  panelSelections: (("A" | "B" | "C" | "D") | null)[];
   score: number;
   hasBadge: boolean;
   myVote: string | null;
@@ -42,7 +42,7 @@ interface GameContextValue {
   checkAvailability: (codeName: string, icon: string) => Promise<{ takenPanels: number[] } | null>;
   joinRoom: (codeName: string, icon: string, studentName: string, panelIndex: number) => Promise<string | null>;
   setPhase: (phase: GamePhase) => void;
-  selectAnswer: (questionIndex: number, key: "A" | "B" | "C") => void;
+  selectAnswer: (questionIndex: number, key: "A" | "B" | "C" | "D") => void;
   submitPanel: (score: number, hasBadge: boolean) => Promise<void>;
   assemblyJoin: () => Promise<void>;
   requestHint: () => Promise<void>;
@@ -101,7 +101,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  const selectAnswer = (questionIndex: number, key: "A" | "B" | "C") => {
+  const selectAnswer = (questionIndex: number, key: "A" | "B" | "C" | "D") => {
     setState((s) => {
       const panelSelections = [...s.panelSelections];
       panelSelections[questionIndex] = key;

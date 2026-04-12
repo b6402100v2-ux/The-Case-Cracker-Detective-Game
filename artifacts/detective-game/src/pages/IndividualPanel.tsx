@@ -63,7 +63,7 @@ export default function IndividualPanel() {
   const timerColor = timerExpired ? "hsl(0 0% 50%)" : timeLeft < 120 ? "hsl(354 78% 44%)" : timeLeft < 300 ? "hsl(48 100% 40%)" : "hsl(210 80% 40%)";
   const timerBg = timerExpired ? "hsl(0 0% 90%)" : timeLeft < 120 ? "hsl(354 78% 96%)" : timeLeft < 300 ? "hsl(48 100% 92%)" : "hsl(210 80% 95%)";
 
-  const optionState = (qIdx: number, key: "A" | "B" | "C") => {
+  const optionState = (qIdx: number, key: "A" | "B" | "C" | "D") => {
     const locked = lockedCorrect[qIdx];
     const selected = selections[qIdx] === key;
     const correct = clue.questions[qIdx].ans === key;

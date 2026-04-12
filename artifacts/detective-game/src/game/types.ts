@@ -12,8 +12,8 @@ export type GamePhase =
 
 export interface MCQuestion {
   q: string;
-  options: { key: "A" | "B" | "C"; text: string }[];
-  ans: "A" | "B" | "C";
+  options: { key: "A" | "B" | "C" | "D"; text: string }[];
+  ans: "A" | "B" | "C" | "D";
   hint: string;
 }
 
@@ -63,54 +63,59 @@ I almost told them then. I almost let the words spill out. But how do you tell p
 When my phone vibrated against the wooden table, the sound was like a gunshot. My stomach did a slow, sickening flip. I didn't even look at the screen, but I instinctively pulled my hand away from Mom's. She didn't notice the way I suddenly went cold, or how I spent the rest of the meal staring at the shadows the candles cast on the wall—jagged, dark shapes that looked exactly like the 'shame' emojis that have been flooding my private folders since Monday.`,
     questions: [
       {
-        q: "How does the girl feel during dinner?",
+        q: "How does the narrator feel at the beginning of the dinner? What makes her feelings change?",
         options: [
-          { key: "A", text: "Happy and hungry." },
-          { key: "B", text: "Scared and quiet." },
-          { key: "C", text: "Angry and loud." },
+          { key: "A", text: "She feels bored at first, then happy — because her dad tells a funny story." },
+          { key: "B", text: "She feels safe and happy at first, then scared — because her phone vibrates." },
+          { key: "C", text: "She feels nervous at first, then relaxed — because her mum holds her hand." },
+          { key: "D", text: "She feels hungry at first, then full and tired — because the meal is very long." },
         ],
         ans: "B",
-        hint: "Re-read: Maya says she 'forgot to be afraid' for just a second — what does that tell you about her real feelings?",
+        hint: "Re-read the first paragraph — Maya says she 'forgot to be afraid' and felt 'so safe.' Then find the moment everything changes.",
       },
       {
-        q: "Why does she pull her hand away from her mom?",
+        q: "The narrator cannot tell her family the truth. Why is it hard for her to speak?",
         options: [
-          { key: "A", text: "The food is hot." },
-          { key: "B", text: "Her phone vibrated." },
-          { key: "C", text: "She is being rude." },
+          { key: "A", text: "Her family is too busy to listen to her problems." },
+          { key: "B", text: "Her family thinks she is happy and doing well, so she is afraid to disappoint them." },
+          { key: "C", text: "She does not trust her family to keep a secret." },
+          { key: "D", text: "She does not know what her problem is yet." },
         ],
         ans: "B",
-        hint: "Find the sentence that starts with 'When my phone vibrated...' — what happened immediately after?",
+        hint: "Find the question Maya almost asks: 'how do you tell people who think you're a masterpiece...' — what is she afraid of?",
       },
       {
-        q: "What do the \"shadows\" on the wall look like?",
+        q: "When the narrator's phone vibrates, she feels very scared. What does this tell us?",
         options: [
-          { key: "A", text: "Mean emojis." },
-          { key: "B", text: "Her parents." },
-          { key: "C", text: "Pretty art." },
+          { key: "A", text: "She does not like loud noises during dinner." },
+          { key: "B", text: "Someone is sending her messages that make her feel frightened." },
+          { key: "C", text: "She is waiting for important news about her art show." },
+          { key: "D", text: "She is angry that her family time is being interrupted." },
+        ],
+        ans: "B",
+        hint: "Look at what Maya compares the vibration to ('like a gunshot') and what she sees on the walls at the end — what has been coming through her phone since Monday?",
+      },
+      {
+        q: "The narrator feels happy and then scared in this story. What is true in both parts?",
+        options: [
+          { key: "A", text: "She is thinking about her art show the whole time." },
+          { key: "B", text: "She is hiding a problem from her family." },
+          { key: "C", text: "She wants to leave the dinner table." },
+          { key: "D", text: "She is angry at her mother." },
+        ],
+        ans: "B",
+        hint: "Even when she feels safe and warm, Maya 'almost told them' but stops herself. Why does she hold back throughout the whole dinner?",
+      },
+      {
+        q: "Which sentence best describes the narrator's main situation in the story?",
+        options: [
+          { key: "A", text: "A young person is being bullied online but cannot tell the people she loves about it." },
+          { key: "B", text: "A young artist is nervous about her art show and is looking for support from her family." },
+          { key: "C", text: "A teenager enjoys family dinners but wishes she had more time alone." },
+          { key: "D", text: "A girl has a fight with her family during dinner and feels sad afterwards." },
         ],
         ans: "A",
-        hint: "Maya compares the candle shadows to something that has been flooding her 'private folders since Monday'.",
-      },
-      {
-        q: "What do her parents think of her?",
-        options: [
-          { key: "A", text: "She is a \"bright spirit.\"" },
-          { key: "B", text: "She is a bad student." },
-          { key: "C", text: "She is very sick." },
-        ],
-        ans: "A",
-        hint: "Find the exact phrase Mom uses to describe Maya near the end of the first paragraph.",
-      },
-      {
-        q: "Main Idea: What is the girl doing at dinner?",
-        options: [
-          { key: "A", text: "Eating her favorite meal." },
-          { key: "B", text: "Hiding a secret." },
-          { key: "C", text: "Arguing with her dad." },
-        ],
-        ans: "B",
-        hint: "Maya writes: 'how do you tell people...' — she almost confesses something. What is she keeping from her family all evening?",
+        hint: "Think about the WHOLE entry — what is the one big problem that runs through everything Maya describes, from feeling afraid to the 'shame' emojis flooding her folders?",
       },
     ],
   },
