@@ -1,0 +1,31 @@
+kind = "video"
+previewPath = "/case-3-intro/"
+title = "Case 3 Intro – Judas Manor"
+version = "1.0.0"
+id = "artifacts/case-3-intro"
+router = "path"
+
+[[integratedSkills]]
+name = "video-js"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/case-3-intro/" ]
+localPort = 19757
+
+[services.development]
+run = "pnpm --filter @workspace/case-3-intro run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/case-3-intro", "run", "build" ]
+publicDir = "artifacts/case-3-intro/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19757"
+BASE_PATH = "/case-3-intro/"

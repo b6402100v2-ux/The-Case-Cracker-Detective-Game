@@ -24,6 +24,24 @@ uri = "file://artifacts/detective-game/public/diary-panel-4.png"
 type = "image"
 title = "cyberbullying digital storm"
 
+[[generated]]
+id = "2wTB549dFXhXe0kAg6bR4"
+uri = "file://artifacts/case-3-intro/public/images/missing_diamond.png"
+type = "image"
+title = "Missing diamond on velvet cushion"
+
+[[generated]]
+id = "qOmRshkyswWBsThN8CIYc"
+uri = "file://artifacts/case-3-intro/public/images/suspects.png"
+type = "image"
+title = "Four shadowy suspect silhouettes"
+
+[[generated]]
+id = "suAoJOF5cCwOoIFLTbTDL"
+uri = "file://artifacts/case-3-intro/public/images/detective_badge.png"
+type = "image"
+title = "Detective badge with diamond"
+
 [[outputs]]
 id = "rx2NlsnACggQK8GrZBGn9"
 uri = "file://artifacts/detective-game/public/diary-panel-1.png"
