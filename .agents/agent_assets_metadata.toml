@@ -47,3 +47,9 @@ id = "KGVVB5BNH5PMkNqvUT8Ax"
 uri = "file://artifacts/detective-game/public/diary-panel-4.png"
 type = "image"
 title = "Panel 4 — The Final Storm (Oct 23rd)"
+
+[[outputs]]
+id = "piPT7XXpL2nRPA-ndCdrw"
+uri = "file://case-crackers-source.zip"
+type = "unspecified"
+title = "Case Crackers – Full Source Code"
