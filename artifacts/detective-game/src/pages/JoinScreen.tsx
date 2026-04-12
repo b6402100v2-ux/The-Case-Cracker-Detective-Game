@@ -66,7 +66,7 @@ export default function JoinScreen() {
       {step === "info" ? (
         <div className="comic-panel bg-card max-w-md w-full overflow-hidden">
           <div className="border-b-4 border-foreground px-5 py-3 text-center" style={{ background: "hsl(354 78% 44%)" }}>
-            <p className="font-mono text-xs tracking-widest text-white/70 uppercase">Youth Detective Agency</p>
+            <p className="font-mono text-xs tracking-widest text-white/70 uppercase">The Case Crackers</p>
             <h2 className="text-3xl font-black text-white tracking-widest" style={{ fontFamily: "'Bangers', cursive" }}>
               JOIN YOUR SQUAD
             </h2>
