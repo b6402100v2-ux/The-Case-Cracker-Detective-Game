@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useGame, type RoomStatus } from "@/game/GameContext";
-import { CLUES, ASSEMBLY_HINTS } from "@/game/types";
+import { CLUES } from "@/game/types";
 
 const TOP_BAR = (
   <div className="fixed top-0 left-0 right-0 flex h-3 z-50">
@@ -11,13 +11,14 @@ const TOP_BAR = (
   </div>
 );
 
+const ASSEMBLY_DURATION = 600;
+const TIMER_KEY = "assemblyTimerStart";
+
 export default function CollaborationScreen() {
-  const { state, fetchRoomStatus, requestHint, setPhase, assemblyJoin } = useGame();
+  const { state, fetchRoomStatus, setPhase, assemblyJoin } = useGame();
   const [status, setStatus] = useState<RoomStatus | null>(null);
-  const [timeLeft, setTimeLeft] = useState(600);
-  const [timerActive, setTimerActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(ASSEMBLY_DURATION);
   const [timerExpired, setTimerExpired] = useState(false);
-  const [revealedHints, setRevealedHints] = useState<boolean[]>([false, false]);
   const [revealedScores, setRevealedScores] = useState<boolean[]>([false, false, false, false]);
   const joinedRef = useRef(false);
   const discussionStartedRef = useRef(false);
@@ -35,7 +36,9 @@ export default function CollaborationScreen() {
       setStatus(s);
       if (s?.allInAssembly && !discussionStartedRef.current) {
         discussionStartedRef.current = true;
-        setTimerActive(true);
+        if (!sessionStorage.getItem(TIMER_KEY)) {
+          sessionStorage.setItem(TIMER_KEY, Date.now().toString());
+        }
       }
     };
     poll();
@@ -44,33 +47,27 @@ export default function CollaborationScreen() {
   }, [fetchRoomStatus]);
 
   useEffect(() => {
-    if (!timerActive) return;
-    const t = setInterval(() => {
-      setTimeLeft((tl) => {
-        if (tl <= 1) { setTimerExpired(true); setTimerActive(false); return 0; }
-        return tl - 1;
-      });
+    const tick = setInterval(() => {
+      const start = sessionStorage.getItem(TIMER_KEY);
+      if (!start) return;
+      const elapsed = Math.floor((Date.now() - parseInt(start)) / 1000);
+      const remaining = Math.max(0, ASSEMBLY_DURATION - elapsed);
+      setTimeLeft(remaining);
+      if (remaining === 0) setTimerExpired(true);
     }, 1000);
-    return () => clearInterval(t);
-  }, [timerActive]);
+    return () => clearInterval(tick);
+  }, []);
 
   const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
   const seconds = (timeLeft % 60).toString().padStart(2, "0");
   const timerColor = timerExpired ? "hsl(0 0% 50%)" : timeLeft < 120 ? "hsl(354 78% 44%)" : timeLeft < 300 ? "hsl(48 100% 40%)" : "hsl(210 80% 40%)";
   const timerBg = timerExpired ? "hsl(0 0% 90%)" : timeLeft < 120 ? "hsl(354 78% 96%)" : timeLeft < 300 ? "hsl(48 100% 92%)" : "hsl(210 80% 95%)";
 
-  const hintsUsed = status?.assemblyHintsUsed ?? 0;
   const assemblyCount = status?.assemblyMembers.length ?? 0;
   const allArrived = status?.allInAssembly ?? false;
   const panelScores = status?.panelScores ?? [null, null, null, null];
   const panelBadges = status?.panelBadges ?? [false, false, false, false];
   const members = status?.members ?? [];
-
-  const handleRevealHint = async (idx: number) => {
-    if (hintsUsed >= 2 || revealedHints[idx]) return;
-    await requestHint();
-    setRevealedHints((r) => r.map((v, i) => (i === idx ? true : v)));
-  };
 
   const accentColors = ["hsl(354 78% 44%)", "hsl(210 80% 40%)", "hsl(48 100% 40%)", "hsl(354 78% 44%)"];
   const accentBgs = ["hsl(354 78% 96%)", "hsl(210 80% 95%)", "hsl(48 100% 92%)", "hsl(354 78% 96%)"];
@@ -134,28 +131,20 @@ export default function CollaborationScreen() {
         /* Discussion phase */
         <div className="max-w-2xl w-full space-y-4">
           {/* Timer HUD */}
-          <div className="comic-panel bg-card flex items-center justify-between px-5 py-2 gap-4">
-            <div className="flex items-center gap-3">
-              <span style={{ color: timerColor }}>⏱</span>
-              <div
-                className="font-mono text-2xl font-black px-3 py-0.5 border-2 tracking-widest"
-                style={{ color: timerColor, background: timerBg, borderColor: timerColor, fontFamily: "'Bangers', cursive", minWidth: "90px", textAlign: "center" }}
-              >
-                {timerExpired ? "TIME UP" : `${minutes}:${seconds}`}
-              </div>
-              <div>
-                <p className="font-mono text-xs font-black uppercase tracking-widest" style={{ color: timerColor }}>
-                  {timerExpired ? "Proceed to vote!" : "Discussion time"}
-                </p>
-                <p className="font-mono text-xs text-muted-foreground">Use this time to share findings</p>
-              </div>
-            </div>
-            <button
-              onClick={() => { setTimerActive((a) => !a); }}
-              className="text-xs font-mono border-2 border-foreground px-2 py-0.5 hover:bg-muted hidden sm:block"
+          <div className="comic-panel bg-card flex items-center gap-4 px-5 py-2">
+            <span style={{ color: timerColor }}>⏱</span>
+            <div
+              className="font-mono text-2xl font-black px-3 py-0.5 border-2 tracking-widest"
+              style={{ color: timerColor, background: timerBg, borderColor: timerColor, fontFamily: "'Bangers', cursive", minWidth: "90px", textAlign: "center" }}
             >
-              {timerActive ? "PAUSE" : "RESUME"}
-            </button>
+              {timerExpired ? "TIME UP" : `${minutes}:${seconds}`}
+            </div>
+            <div>
+              <p className="font-mono text-xs font-black uppercase tracking-widest" style={{ color: timerColor }}>
+                {timerExpired ? "Time's up — proceed to vote!" : "Discussion + voting time"}
+              </p>
+              <p className="font-mono text-xs text-muted-foreground">Timer continues into the verdict screen</p>
+            </div>
           </div>
 
           {/* Panel score reveal cards */}
@@ -215,38 +204,6 @@ export default function CollaborationScreen() {
                 <p key={i} className="text-xs font-mono text-foreground/80 bg-muted px-3 py-1.5 border border-foreground/10">{item}</p>
               ))}
             </div>
-          </div>
-
-          {/* Assembly hints */}
-          <div className="comic-panel bg-card p-4 space-y-2">
-            <div className="flex items-center justify-between mb-1">
-              <p className="font-mono text-xs font-black tracking-widest uppercase" style={{ color: "hsl(354 78% 44%)" }}>
-                ▶ Squad Hints ({2 - hintsUsed} remaining):
-              </p>
-              <span className="font-mono text-xs text-muted-foreground">Use before voting if needed</span>
-            </div>
-            {[0, 1].map((idx) => {
-              const used = revealedHints[idx] || hintsUsed > idx;
-              const canReveal = !used && hintsUsed < 2;
-              return (
-                <div key={idx}>
-                  {used ? (
-                    <div className="border-l-4 pl-3 py-2 font-mono text-xs leading-relaxed" style={{ borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)" }}>
-                      {ASSEMBLY_HINTS[idx]}
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => canReveal && handleRevealHint(idx)}
-                      disabled={!canReveal}
-                      className="w-full border-2 border-dashed px-4 py-2.5 font-mono text-sm text-left transition-all hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ borderColor: canReveal ? "hsl(48 100% 40%)" : "hsl(0 0% 75%)" }}
-                    >
-                      {canReveal ? `💡 REVEAL HINT ${idx + 1} (costs 1 lifeline)` : "💡 Hint used up"}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
           </div>
 
           {/* Go to vote */}

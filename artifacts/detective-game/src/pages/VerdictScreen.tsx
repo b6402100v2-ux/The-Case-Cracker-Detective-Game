@@ -13,6 +13,9 @@ const TOP_BAR = (
 
 type VerdictPhase = "voting" | "waiting" | "result";
 
+const ASSEMBLY_DURATION = 600;
+const TIMER_KEY = "assemblyTimerStart";
+
 export default function VerdictScreen() {
   const { state, fetchRoomStatus, submitVote, setPhase } = useGame();
   const [status, setStatus] = useState<RoomStatus | null>(null);
@@ -20,8 +23,22 @@ export default function VerdictScreen() {
   const [hasVoted, setHasVoted] = useState(false);
   const [vPhase, setVPhase] = useState<VerdictPhase>("voting");
   const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(ASSEMBLY_DURATION);
+  const [timerExpired, setTimerExpired] = useState(false);
   const lastRoundRef = useRef<number>(1);
   const resultShownRef = useRef(false);
+
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const start = sessionStorage.getItem(TIMER_KEY);
+      if (!start) return;
+      const elapsed = Math.floor((Date.now() - parseInt(start)) / 1000);
+      const remaining = Math.max(0, ASSEMBLY_DURATION - elapsed);
+      setTimeLeft(remaining);
+      if (remaining === 0) setTimerExpired(true);
+    }, 1000);
+    return () => clearInterval(tick);
+  }, []);
 
   useEffect(() => {
     const poll = async () => {
@@ -98,6 +115,31 @@ export default function VerdictScreen() {
       </div>
 
       <div className="max-w-xl w-full space-y-4">
+        {/* Shared assembly timer */}
+        {(() => {
+          const mins = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+          const secs = (timeLeft % 60).toString().padStart(2, "0");
+          const tColor = timerExpired ? "hsl(0 0% 50%)" : timeLeft < 120 ? "hsl(354 78% 44%)" : timeLeft < 300 ? "hsl(48 100% 40%)" : "hsl(210 80% 40%)";
+          const tBg = timerExpired ? "hsl(0 0% 90%)" : timeLeft < 120 ? "hsl(354 78% 96%)" : timeLeft < 300 ? "hsl(48 100% 92%)" : "hsl(210 80% 95%)";
+          return (
+            <div className="comic-panel bg-card flex items-center gap-4 px-5 py-2">
+              <span style={{ color: tColor }}>⏱</span>
+              <div
+                className="font-mono text-2xl font-black px-3 py-0.5 border-2 tracking-widest"
+                style={{ color: tColor, background: tBg, borderColor: tColor, fontFamily: "'Bangers', cursive", minWidth: "90px", textAlign: "center" }}
+              >
+                {timerExpired ? "TIME UP" : `${mins}:${secs}`}
+              </div>
+              <div>
+                <p className="font-mono text-xs font-black uppercase tracking-widest" style={{ color: tColor }}>
+                  {timerExpired ? "Time's up!" : "Assembly time remaining"}
+                </p>
+                <p className="font-mono text-xs text-muted-foreground">Continued from discussion</p>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Score info */}
         <div className="comic-panel bg-card p-4 flex items-center justify-between">
           <div>
