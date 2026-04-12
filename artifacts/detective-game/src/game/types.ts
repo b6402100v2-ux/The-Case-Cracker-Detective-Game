@@ -11,6 +11,7 @@ export interface MCQuestion {
   q: string;
   options: { key: "A" | "B" | "C"; text: string }[];
   ans: "A" | "B" | "C";
+  hint: string;
 }
 
 export interface Clue {
@@ -52,6 +53,7 @@ When my phone vibrated against the wooden table, the sound was like a gunshot. M
           { key: "C", text: "Angry and loud." },
         ],
         ans: "B",
+        hint: "Re-read: Maya says she 'forgot to be afraid' for just a second — what does that tell you about her real feelings?",
       },
       {
         q: "Why does she pull her hand away from her mom?",
@@ -61,6 +63,7 @@ When my phone vibrated against the wooden table, the sound was like a gunshot. M
           { key: "C", text: "She is being rude." },
         ],
         ans: "B",
+        hint: "Find the sentence that starts with 'When my phone vibrated...' — what happened immediately after?",
       },
       {
         q: "What do the \"shadows\" on the wall look like?",
@@ -70,6 +73,7 @@ When my phone vibrated against the wooden table, the sound was like a gunshot. M
           { key: "C", text: "Pretty art." },
         ],
         ans: "A",
+        hint: "Maya compares the candle shadows to something that has been flooding her 'private folders since Monday'.",
       },
       {
         q: "What do her parents think of her?",
@@ -79,6 +83,7 @@ When my phone vibrated against the wooden table, the sound was like a gunshot. M
           { key: "C", text: "She is very sick." },
         ],
         ans: "A",
+        hint: "Find the exact phrase Mom uses to describe Maya near the end of the first paragraph.",
       },
       {
         q: "Main Idea: What is the girl doing at dinner?",
@@ -88,6 +93,7 @@ When my phone vibrated against the wooden table, the sound was like a gunshot. M
           { key: "C", text: "Arguing with her dad." },
         ],
         ans: "B",
+        hint: "Maya writes: 'how do you tell people...' — she almost confesses something. What is she keeping from her family all evening?",
       },
     ],
   },
@@ -112,6 +118,7 @@ As they walked away, I saw them glance at their phones and then quickly at me. I
           { key: "C", text: "She can sleep there." },
         ],
         ans: "A",
+        hint: "Maya says the art room is the only place where 'the air doesn't feel like it's...' — fill in the blank to find the answer.",
       },
       {
         q: "What do her friends Chloe and Sarah bring her?",
@@ -121,6 +128,7 @@ As they walked away, I saw them glance at their phones and then quickly at me. I
           { key: "C", text: "A history book." },
         ],
         ans: "B",
+        hint: "Read the sentence where Chloe and Sarah 'came by to drop off' something. What exactly did they bring?",
       },
       {
         q: "What \"clue\" shows a problem at school?",
@@ -130,6 +138,7 @@ As they walked away, I saw them glance at their phones and then quickly at me. I
           { key: "C", text: "The room is too dark." },
         ],
         ans: "B",
+        hint: "Look for the 'split second' moment as Chloe and Sarah walked away — what did Maya catch them doing?",
       },
       {
         q: "Who is the \"unseen audience\"?",
@@ -139,6 +148,7 @@ As they walked away, I saw them glance at their phones and then quickly at me. I
           { key: "C", text: "People at a museum." },
         ],
         ans: "B",
+        hint: "Maya mentions a 'digital footprint' and 'the lens' — this audience isn't physically present at school.",
       },
       {
         q: "Main Idea: How does the girl feel at school?",
@@ -148,6 +158,7 @@ As they walked away, I saw them glance at their phones and then quickly at me. I
           { key: "C", text: "Bored and tired." },
         ],
         ans: "B",
+        hint: "Even in her 'sanctuary', Maya says she can feel people 'waiting for the next mistake.' What feeling does that create?",
       },
     ],
   },
@@ -172,6 +183,7 @@ We took a selfie against the moonlight, but as he went to post it, I felt a wave
           { key: "C", text: "Quiet and bored." },
         ],
         ans: "B",
+        hint: "Leo gave her his hoodie, said she was 'real', and made her feel 'seen.' What kind of person does those things?",
       },
       {
         q: "Why does she say \"Don't tag me\"?",
@@ -181,6 +193,7 @@ We took a selfie against the moonlight, but as he went to post it, I felt a wave
           { key: "C", text: "She hates the photo." },
         ],
         ans: "B",
+        hint: "Maya says 'every time my name is linked to a photo, the Comment section turns into a...' — what does she fear will happen?",
       },
       {
         q: "What is the \"slaughterhouse\"?",
@@ -190,6 +203,7 @@ We took a selfie against the moonlight, but as he went to post it, I felt a wave
           { key: "C", text: "A scary movie." },
         ],
         ans: "A",
+        hint: "Read the sentence: 'every time my name is linked to a photo, the 'Comment' section turns into a...' — finish that sentence.",
       },
       {
         q: "How does she feel when Leo kisses her?",
@@ -199,6 +213,7 @@ We took a selfie against the moonlight, but as he went to post it, I felt a wave
           { key: "C", text: "Totally safe." },
         ],
         ans: "A",
+        hint: "Maya describes the kiss as giving her 'a flicker of...' — what small feeling does a flicker represent?",
       },
       {
         q: "Main Idea: Why is the date sad?",
@@ -208,6 +223,7 @@ We took a selfie against the moonlight, but as he went to post it, I felt a wave
           { key: "C", text: "Leo wants to break up." },
         ],
         ans: "B",
+        hint: "Even Leo's arms around her 'can't stop the silent, digital scream.' What does this tell you about Leo's love vs. the bullying?",
       },
     ],
   },
@@ -236,6 +252,7 @@ I'm looking at the roast Mom made, the art Mrs. Harrison praised, and the hoodie
           { key: "C", text: "She lost her phone." },
         ],
         ans: "B",
+        hint: "People are 'hitting like on a thread that says I shouldn't exist' and there's a 'Burn Page.' What is this type of online attack called?",
       },
       {
         q: "Where did she see the bullying link?",
@@ -245,6 +262,7 @@ I'm looking at the roast Mom made, the art Mrs. Harrison praised, and the hoodie
           { key: "C", text: "In a library book." },
         ],
         ans: "A",
+        hint: "Maya lists the physical places she saw the URL. What is the very first location she mentions?",
       },
       {
         q: "What is the \"Countdown\"?",
@@ -254,6 +272,7 @@ I'm looking at the roast Mom made, the art Mrs. Harrison praised, and the hoodie
           { key: "C", text: "A school project." },
         ],
         ans: "B",
+        hint: "The diary starts with 'The Countdown is over. I finally looked.' What had Maya been avoiding for weeks?",
       },
       {
         q: "Why can't her family help her now?",
@@ -263,6 +282,7 @@ I'm looking at the roast Mom made, the art Mrs. Harrison praised, and the hoodie
           { key: "C", text: "They are not at home." },
         ],
         ans: "B",
+        hint: "The roast, the art, the hoodie are 'beautiful things, but they aren't loud enough.' What IS too loud?",
       },
       {
         q: "Main Idea: What does \"turn off the sound\" mean?",
@@ -272,6 +292,7 @@ I'm looking at the roast Mom made, the art Mrs. Harrison praised, and the hoodie
           { key: "C", text: "Listen to soft music." },
         ],
         ans: "B",
+        hint: "The 'sound' is a metaphor. If she 'can't turn off the screen', what 'sound' — the digital noise — is she really trying to silence?",
       },
     ],
   },

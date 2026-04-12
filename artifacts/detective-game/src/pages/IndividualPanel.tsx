@@ -1,91 +1,129 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useGame } from "@/game/GameContext";
 import { CLUES } from "@/game/types";
+
+const PANEL_MINUTES = 10;
+const TOTAL_SECONDS = PANEL_MINUTES * 60;
 
 export default function IndividualPanel() {
   const { state, selectAnswer, submitPanel } = useGame();
   const clue = CLUES[state.panelIndex];
   const selections = state.panelSelections;
 
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
-  const [stampIn, setStampIn] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const accentColors = [
-    "hsl(354 78% 44%)",
-    "hsl(210 80% 40%)",
-    "hsl(48 100% 50%)",
-    "hsl(354 78% 44%)",
-  ];
-  const accentDark = [
-    "hsl(354 78% 28%)",
-    "hsl(210 80% 25%)",
-    "hsl(48 85% 28%)",
-    "hsl(354 78% 28%)",
-  ];
-  const accentBg = [
-    "hsl(354 78% 96%)",
-    "hsl(210 80% 95%)",
-    "hsl(48 100% 92%)",
-    "hsl(354 78% 96%)",
-  ];
-  const accentTextLight = ["white", "white", "hsl(0 0% 10%)", "white"];
-
   const idx = state.panelIndex;
-  const color = accentColors[idx];
-  const colorDark = accentDark[idx];
-  const colorBg = accentBg[idx];
-  const textColor = accentTextLight[idx];
+  const accentColor = ["hsl(354 78% 44%)", "hsl(210 80% 40%)", "hsl(48 100% 50%)", "hsl(354 78% 44%)"][idx];
+  const accentDark = ["hsl(354 78% 28%)", "hsl(210 80% 25%)", "hsl(48 85% 28%)", "hsl(354 78% 28%)"][idx];
+  const accentBg = ["hsl(354 78% 96%)", "hsl(210 80% 95%)", "hsl(48 100% 92%)", "hsl(354 78% 96%)"][idx];
+  const accentText = ["white", "white", "hsl(0 0% 10%)", "white"][idx];
 
-  const score = submitted
-    ? clue.questions.reduce((acc, q, i) => acc + (selections[i] === q.ans ? 1 : 0), 0)
-    : 0;
+  const [timeLeft, setTimeLeft] = useState(TOTAL_SECONDS);
+  const [timerExpired, setTimerExpired] = useState(false);
+  const [attemptsMade, setAttemptsMade] = useState(0);
+  const [lockedCorrect, setLockedCorrect] = useState<boolean[]>(clue.questions.map(() => false));
+  const [showHint, setShowHint] = useState<boolean[]>(clue.questions.map(() => false));
+  const [lifelinesLeft, setLifelinesLeft] = useState(3);
+  const [fiftyFiftyUsed, setFiftyFiftyUsed] = useState<boolean[]>(clue.questions.map(() => false));
+  const [eliminatedOptions, setEliminatedOptions] = useState<Record<number, ("A" | "B" | "C")[]>>({});
+  const [hasBadge, setHasBadge] = useState(false);
+  const [proceeding, setProceeding] = useState(false);
 
-  const allAnswered = selections.every((s) => s !== null);
+  const allCorrect = lockedCorrect.every(Boolean);
+  const canProceed = allCorrect || timerExpired;
+  const canCheck = clue.questions.every((_, i) => lockedCorrect[i] || selections[i] !== null);
 
-  const handleSubmit = () => {
-    if (!allAnswered) {
-      setError("Answer all 5 questions before submitting!");
-      return;
-    }
-    setError("");
-    setSubmitted(true);
-    setTimeout(() => setStampIn(true), 300);
+  useEffect(() => {
+    if (timerExpired) return;
+    const interval = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          setTimerExpired(true);
+          clearInterval(interval);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerExpired]);
+
+  const handleCheck = () => {
+    const newLocked = lockedCorrect.map((was, i) => was || selections[i] === clue.questions[i].ans);
+    const newHint = clue.questions.map((q, i) => {
+      if (newLocked[i]) return false;
+      return selections[i] !== null && selections[i] !== q.ans;
+    });
+    setLockedCorrect(newLocked);
+    setShowHint(newHint);
+    setAttemptsMade((a) => a + 1);
+    if (newLocked.every(Boolean) && !timerExpired) setHasBadge(true);
   };
+
+  const handle5050 = useCallback((qIdx: number) => {
+    if (lifelinesLeft <= 0 || fiftyFiftyUsed[qIdx] || lockedCorrect[qIdx]) return;
+    const correct = clue.questions[qIdx].ans;
+    const wrongOpts = (["A", "B", "C"] as const).filter((k) => k !== correct && !(eliminatedOptions[qIdx] ?? []).includes(k));
+    if (wrongOpts.length === 0) return;
+    const toEliminate = wrongOpts[Math.floor(Math.random() * wrongOpts.length)];
+    setEliminatedOptions((prev) => ({ ...prev, [qIdx]: [...(prev[qIdx] ?? []), toEliminate] }));
+    setFiftyFiftyUsed((prev) => prev.map((v, i) => (i === qIdx ? true : v)));
+    setLifelinesLeft((l) => l - 1);
+    if (selections[qIdx] === toEliminate) selectAnswer(qIdx, correct);
+  }, [lifelinesLeft, fiftyFiftyUsed, lockedCorrect, eliminatedOptions, clue.questions, selections, selectAnswer]);
 
   const handleLock = async () => {
-    setLoading(true);
-    await submitPanel();
-    setLoading(false);
+    setProceeding(true);
+    const score = lockedCorrect.filter(Boolean).length;
+    await submitPanel(score, hasBadge);
   };
 
-  const optionBase = (qIdx: number, key: "A" | "B" | "C") => {
+  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+  const seconds = (timeLeft % 60).toString().padStart(2, "0");
+  const timerColor = timerExpired ? "hsl(0 0% 50%)" : timeLeft < 120 ? "hsl(354 78% 44%)" : timeLeft < 300 ? "hsl(48 100% 40%)" : "hsl(210 80% 40%)";
+  const timerBg = timerExpired ? "hsl(0 0% 90%)" : timeLeft < 120 ? "hsl(354 78% 96%)" : timeLeft < 300 ? "hsl(48 100% 92%)" : "hsl(210 80% 95%)";
+
+  const optionState = (qIdx: number, key: "A" | "B" | "C") => {
+    const eliminated = (eliminatedOptions[qIdx] ?? []).includes(key);
+    const locked = lockedCorrect[qIdx];
     const selected = selections[qIdx] === key;
     const correct = clue.questions[qIdx].ans === key;
-    if (!submitted) {
-      return {
-        cls: "border-2 px-4 py-2 font-mono text-sm cursor-pointer transition-all duration-100 flex items-center gap-3 hover:translate-x-0.5 select-none",
-        style: selected
-          ? { borderColor: color, background: colorBg, color: "hsl(0 0% 10%)" }
-          : { borderColor: "hsl(0 0% 75%)", background: "white", color: "hsl(0 0% 30%)" },
-      };
+    const attempted = attemptsMade > 0;
+
+    if (eliminated) return "eliminated";
+    if (locked) {
+      if (correct) return "locked-correct";
+      return "locked-unchosen";
     }
-    if (correct) return { cls: "border-2 px-4 py-2 font-mono text-sm flex items-center gap-3", style: { borderColor: "hsl(210 80% 40%)", background: "hsl(210 80% 95%)", color: "hsl(0 0% 10%)" } };
-    if (selected && !correct) return { cls: "border-2 px-4 py-2 font-mono text-sm flex items-center gap-3", style: { borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)", color: "hsl(0 0% 10%)" } };
-    return { cls: "border-2 px-4 py-2 font-mono text-sm flex items-center gap-3", style: { borderColor: "hsl(0 0% 85%)", background: "hsl(0 0% 98%)", color: "hsl(0 0% 60%)" } };
+    if (attempted && selected && !correct) return "wrong";
+    if (attempted && correct && selected) return "correct";
+    if (selected) return "selected";
+    return "idle";
   };
 
-  const optionIcon = (qIdx: number, key: "A" | "B" | "C") => {
-    if (!submitted) return selections[qIdx] === key ? "◉" : "○";
-    const correct = clue.questions[qIdx].ans === key;
-    if (correct) return "✓";
-    if (selections[qIdx] === key) return "✗";
-    return "○";
+  const optionStyle = (s: string): { cls: string; style: React.CSSProperties } => {
+    const base = "border-2 px-4 py-2 font-mono text-sm flex items-center gap-3 transition-all duration-100";
+    switch (s) {
+      case "locked-correct": return { cls: `${base}`, style: { borderColor: "hsl(210 80% 40%)", background: "hsl(210 80% 95%)", color: "hsl(0 0% 10%)" } };
+      case "wrong": return { cls: `${base} cursor-pointer hover:translate-x-0.5`, style: { borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)", color: "hsl(0 0% 10%)" } };
+      case "selected": return { cls: `${base} cursor-pointer hover:translate-x-0.5 select-none`, style: { borderColor: accentColor, background: accentBg, color: "hsl(0 0% 10%)" } };
+      case "idle": return { cls: `${base} cursor-pointer hover:translate-x-0.5 select-none`, style: { borderColor: "hsl(0 0% 75%)", background: "white", color: "hsl(0 0% 30%)" } };
+      case "eliminated": return { cls: `${base} opacity-30 cursor-not-allowed line-through`, style: { borderColor: "hsl(0 0% 85%)", background: "hsl(0 0% 97%)", color: "hsl(0 0% 60%)" } };
+      default: return { cls: `${base}`, style: { borderColor: "hsl(0 0% 85%)", background: "hsl(0 0% 97%)", color: "hsl(0 0% 60%)" } };
+    }
+  };
+
+  const optionIcon = (s: string) => {
+    switch (s) {
+      case "locked-correct": return "✓";
+      case "wrong": return "✗";
+      case "selected": return "◉";
+      case "idle": return "○";
+      case "eliminated": return "—";
+      default: return "○";
+    }
   };
 
   return (
-    <div className="min-h-screen halftone-bg flex flex-col items-center py-6 px-4">
+    <div className="min-h-screen halftone-bg flex flex-col items-center py-5 px-4">
       <div className="fixed top-0 left-0 right-0 flex h-3 z-50">
         <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
         <div className="flex-1" style={{ background: "hsl(210 80% 40%)" }} />
@@ -93,133 +131,249 @@ export default function IndividualPanel() {
         <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
       </div>
 
-      {/* Squad badge */}
-      <div className="flex items-center gap-3 mt-6 mb-4">
-        <span className="text-2xl">{state.icon}</span>
-        <div>
-          <p className="font-black text-sm tracking-widest uppercase" style={{ fontFamily: "'Bangers', cursive", color }}>
-            {state.codeName}
-          </p>
-          <p className="font-mono text-xs text-muted-foreground tracking-widest">Panel {idx + 1} of 4</p>
-        </div>
-        <div className="sfx-burst text-sm font-black px-3 py-1 ml-auto" style={{ background: clue.sfxColor, color: clue.sfxTextColor }}>
-          {clue.sfx}
+      {/* Sticky HUD: timer + lifelines */}
+      <div className="sticky top-4 z-40 w-full max-w-2xl mb-4">
+        <div className="comic-panel bg-card flex items-center justify-between px-4 py-2 gap-4">
+          {/* Timer */}
+          <div className="flex items-center gap-2">
+            <div className="text-sm" style={{ color: timerColor }}>⏱</div>
+            <div
+              className="font-mono text-2xl font-black tracking-widest px-3 py-0.5 border-2"
+              style={{ color: timerColor, background: timerBg, borderColor: timerColor, fontFamily: "'Bangers', cursive", minWidth: "80px", textAlign: "center" }}
+            >
+              {timerExpired ? "TIME UP" : `${minutes}:${seconds}`}
+            </div>
+            <span className="font-mono text-xs text-muted-foreground tracking-widest hidden sm:block">
+              {timerExpired ? "You may lock your panel" : "remaining"}
+            </span>
+          </div>
+
+          {/* Lifelines */}
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-muted-foreground tracking-widest uppercase hidden sm:block">50/50:</span>
+            <div className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="border-2 text-xs font-black px-2 py-0.5 font-mono"
+                  style={
+                    i < lifelinesLeft
+                      ? { borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)", color: "hsl(0 0% 10%)" }
+                      : { borderColor: "hsl(0 0% 80%)", background: "hsl(0 0% 96%)", color: "hsl(0 0% 70%)" }
+                  }
+                >
+                  {i < lifelinesLeft ? "50/50" : "✗"}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Badge earned */}
+          {hasBadge && (
+            <div className="sfx-burst text-xs font-black px-3 py-1 animate-pulse" style={{ background: "hsl(48 100% 50%)", color: "hsl(0 0% 10%)" }}>
+              🏆 BADGE!
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Main panel */}
-      <div className={`${clue.panelColor} bg-card max-w-2xl w-full overflow-hidden relative`}>
-        {stampIn && (
-          <div className="absolute top-4 right-4 z-10 stamp-in">
-            <div
-              className="text-2xl font-black border-4 px-3 py-1 rotate-[-12deg]"
-              style={{ color: score >= 3 ? "hsl(210 80% 40%)" : "hsl(354 78% 44%)", borderColor: score >= 3 ? "hsl(210 80% 40%)" : "hsl(354 78% 44%)", fontFamily: "'Bangers', cursive" }}
-            >
-              {score}/5
-            </div>
-          </div>
-        )}
-
+      {/* Panel card */}
+      <div className={`${clue.panelColor} bg-card max-w-2xl w-full overflow-hidden`}>
         {/* Panel header */}
-        <div className="border-b-4 border-foreground px-5 py-3 flex items-center justify-between" style={{ background: color }}>
+        <div className="border-b-4 border-foreground px-5 py-3 flex items-center justify-between" style={{ background: accentColor }}>
           <div>
-            <span className="text-xl font-black uppercase tracking-wide" style={{ color: textColor }}>
+            <span className="text-xl font-black uppercase tracking-wide" style={{ color: accentText }}>
               {clue.icon} {clue.date}: {clue.loc}
             </span>
-            <span className="block text-xs font-mono opacity-80 mt-0.5" style={{ color: textColor }}>
-              Domain: {clue.domain}
-            </span>
+            <span className="block text-xs font-mono opacity-80 mt-0.5" style={{ color: accentText }}>Domain: {clue.domain}</span>
           </div>
           <div className="text-right">
-            <p className="font-mono text-xs tracking-widest opacity-70" style={{ color: textColor }}>DETECTIVE</p>
-            <p className="font-black text-sm tracking-widest uppercase" style={{ color: textColor }}>
-              {state.studentName}
-            </p>
+            <p className="font-mono text-xs tracking-widest opacity-70" style={{ color: accentText }}>DETECTIVE</p>
+            <p className="font-black text-sm tracking-widest uppercase" style={{ color: accentText }}>{state.studentName}</p>
           </div>
         </div>
 
         <div className="p-5 space-y-5">
           {/* Diary entry */}
           <div className="bg-muted border-2 border-foreground/15 p-4 font-mono text-xs leading-relaxed max-h-52 overflow-y-auto">
-            <p className="text-xs tracking-widest font-black text-muted-foreground uppercase mb-2">📖 Diary Entry:</p>
+            <p className="text-xs tracking-widest font-black text-muted-foreground uppercase mb-2">📖 Diary Entry — Read carefully:</p>
             {clue.text.split("\n\n").map((para, i) => (
               <p key={i} className="text-foreground/80 mb-2">{para}</p>
             ))}
           </div>
 
-          {/* Questions */}
+          {/* Progress bar */}
           <div>
-            <p className="text-xs font-mono font-black tracking-widest uppercase mb-3" style={{ color }}>
-              ▶ Answer All 5 Questions:
-            </p>
-            <div className="space-y-4">
-              {clue.questions.map((q, qIdx) => (
-                <div key={qIdx} className="space-y-2">
-                  <p className="font-mono text-sm font-bold text-foreground">
-                    <span className="font-black" style={{ color }}>{qIdx + 1}.</span> {q.q}
-                  </p>
-                  <div className="grid grid-cols-1 gap-1.5 pl-4">
-                    {q.options.map((opt) => {
-                      const s = optionBase(qIdx, opt.key);
-                      return (
-                        <button
-                          key={opt.key}
-                          className={s.cls}
-                          style={s.style}
-                          onClick={() => !submitted && selectAnswer(qIdx, opt.key)}
-                          disabled={submitted}
-                        >
-                          <span className="font-black w-4 shrink-0" style={{ color: submitted ? undefined : (selections[qIdx] === opt.key ? color : "hsl(0 0% 60%)") }}>
-                            {optionIcon(qIdx, opt.key)}
-                          </span>
-                          <span className="font-black mr-1" style={{ color: submitted ? undefined : (selections[qIdx] === opt.key ? color : "hsl(0 0% 50%)") }}>
-                            {opt.key})
-                          </span>
-                          {opt.text}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+            <div className="flex justify-between font-mono text-xs text-muted-foreground mb-1">
+              <span>{lockedCorrect.filter(Boolean).length}/5 correct</span>
+              <span>{attemptsMade > 0 ? `${attemptsMade} attempt${attemptsMade !== 1 ? "s" : ""}` : "Not checked yet"}</span>
+            </div>
+            <div className="h-2 border-2 border-foreground/20 bg-muted overflow-hidden">
+              <div
+                className="h-full transition-all duration-500"
+                style={{
+                  width: `${(lockedCorrect.filter(Boolean).length / 5) * 100}%`,
+                  background: allCorrect ? "hsl(210 80% 40%)" : accentColor,
+                }}
+              />
             </div>
           </div>
 
-          {error && <p className="font-mono text-sm font-bold" style={{ color: "hsl(354 78% 44%)" }}>✗ {error}</p>}
+          {/* Questions */}
+          <div>
+            <p className="text-xs font-mono font-black tracking-widest uppercase mb-3" style={{ color: accentColor }}>
+              ▶ Answer All 5 Questions:
+            </p>
+            <div className="space-y-5">
+              {clue.questions.map((q, qIdx) => {
+                const locked = lockedCorrect[qIdx];
+                const attempted = attemptsMade > 0;
+                const isWrong = attempted && !locked && selections[qIdx] !== null && selections[qIdx] !== q.ans;
+                const can5050 = !locked && !fiftyFiftyUsed[qIdx] && lifelinesLeft > 0;
 
-          {submitted && (
-            <div className="slide-up border-2 p-4 text-center" style={{
-              borderColor: score >= 3 ? "hsl(210 80% 40%)" : "hsl(354 78% 44%)",
-              background: score >= 3 ? "hsl(210 80% 95%)" : "hsl(354 78% 96%)",
-            }}>
-              <p className="font-black text-xl tracking-widest" style={{ color: score >= 3 ? "hsl(210 80% 40%)" : "hsl(354 78% 44%)", fontFamily: "'Bangers', cursive" }}>
-                {score >= 4 ? "EXCELLENT!" : score >= 3 ? "GOOD WORK!" : score >= 2 ? "PARTIAL CLUE" : "KEEP TRYING"}
+                return (
+                  <div key={qIdx} className={`space-y-2 rounded-none transition-all duration-300 ${locked ? "opacity-80" : ""}`}>
+                    {/* Question header */}
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-mono text-sm font-bold text-foreground flex-1">
+                        <span className="font-black" style={{ color: locked ? "hsl(210 80% 40%)" : isWrong ? "hsl(354 78% 44%)" : accentColor }}>
+                          {qIdx + 1}.
+                        </span>{" "}
+                        {q.q}
+                        {locked && <span className="ml-2 font-mono text-xs" style={{ color: "hsl(210 80% 40%)" }}>✓ CORRECT</span>}
+                        {isWrong && <span className="ml-2 font-mono text-xs" style={{ color: "hsl(354 78% 44%)" }}>✗ TRY AGAIN</span>}
+                      </p>
+                      {can5050 && (
+                        <button
+                          onClick={() => handle5050(qIdx)}
+                          className="shrink-0 border-2 px-2 py-0.5 text-xs font-black font-mono hover:scale-105 active:scale-95 transition-all"
+                          style={{ borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)", color: "hsl(0 0% 10%)" }}
+                          title="Use 50/50 lifeline on this question"
+                        >
+                          50/50 🃏
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Options */}
+                    <div className="grid grid-cols-1 gap-1.5 pl-4">
+                      {q.options.map((opt) => {
+                        const s = optionState(qIdx, opt.key);
+                        const { cls, style } = optionStyle(s);
+                        const isElim = s === "eliminated";
+                        const isLocked = s === "locked-correct" || s === "locked-unchosen";
+                        return (
+                          <button
+                            key={opt.key}
+                            className={cls}
+                            style={style}
+                            disabled={isElim || isLocked}
+                            onClick={() => {
+                              if (!isElim && !isLocked) selectAnswer(qIdx, opt.key);
+                            }}
+                          >
+                            <span
+                              className="font-black w-4 shrink-0"
+                              style={{ color: s === "locked-correct" ? "hsl(210 80% 40%)" : s === "wrong" ? "hsl(354 78% 44%)" : s === "selected" ? accentColor : "hsl(0 0% 60%)" }}
+                            >
+                              {optionIcon(s)}
+                            </span>
+                            <span
+                              className="font-black mr-1"
+                              style={{ color: s === "locked-correct" ? "hsl(210 80% 40%)" : s === "selected" ? accentColor : "hsl(0 0% 50%)" }}
+                            >
+                              {opt.key})
+                            </span>
+                            {opt.text}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Hint */}
+                    {showHint[qIdx] && (
+                      <div className="slide-up ml-4 border-l-4 pl-3 py-1 font-mono text-xs leading-relaxed" style={{ borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)" }}>
+                        <span className="font-black" style={{ color: "hsl(48 85% 28%)" }}>💡 HINT: </span>
+                        <span className="text-foreground/80">{q.hint}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Badge earned banner */}
+          {hasBadge && (
+            <div className="slide-up border-4 border-foreground p-4 text-center" style={{ background: "hsl(48 100% 50%)" }}>
+              <p className="text-3xl font-black tracking-widest" style={{ fontFamily: "'Bangers', cursive", color: "hsl(0 0% 10%)" }}>
+                🏆 DETECTIVE BADGE EARNED!
               </p>
-              <p className="font-mono text-sm text-muted-foreground mt-1">Score: <strong>{score}/5</strong></p>
-              <p className="font-mono text-xs text-muted-foreground mt-1">Lock your panel to wait for your squad.</p>
+              <p className="font-mono text-sm mt-1">You got 5/5 correct — excellent detective work!</p>
             </div>
           )}
 
-          {!submitted ? (
-            <button
-              onClick={handleSubmit}
-              className="comic-panel w-full text-white py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95"
-              style={{ background: color, boxShadow: `4px 4px 0 ${colorDark}` }}
-            >
-              SUBMIT ANSWERS ({selections.filter(Boolean).length}/5 selected)
-            </button>
-          ) : (
-            <button
-              onClick={handleLock}
-              disabled={loading}
-              className="comic-panel w-full text-white py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95 disabled:opacity-60"
-              style={{ background: "hsl(354 78% 44%)", boxShadow: "4px 4px 0 hsl(354 78% 28%)" }}
-            >
-              {loading ? "LOCKING..." : "LOCK & WAIT FOR SQUAD →"}
-            </button>
+          {/* Timer expired banner */}
+          {timerExpired && !allCorrect && (
+            <div className="slide-up border-4 p-3 text-center" style={{ borderColor: "hsl(0 0% 60%)", background: "hsl(0 0% 95%)" }}>
+              <p className="font-black text-lg" style={{ fontFamily: "'Bangers', cursive", color: "hsl(0 0% 40%)" }}>
+                ⏱ TIME'S UP — You may proceed without the badge.
+              </p>
+              <p className="font-mono text-xs text-muted-foreground mt-0.5">Score: {lockedCorrect.filter(Boolean).length}/5 correct</p>
+            </div>
           )}
+
+          {/* Must fix errors message */}
+          {attemptsMade > 0 && !allCorrect && !timerExpired && (
+            <div className="border-2 p-3 text-center" style={{ borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)" }}>
+              <p className="font-mono text-sm font-black" style={{ color: "hsl(354 78% 44%)" }}>
+                ✗ Fix highlighted questions to earn your badge and proceed.
+              </p>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="space-y-2">
+            {/* Check/Recheck button — shown while not all correct and timer not expired */}
+            {!allCorrect && !timerExpired && (
+              <button
+                onClick={handleCheck}
+                disabled={!canCheck}
+                className="comic-panel w-full text-white py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95 disabled:opacity-50"
+                style={{ background: accentColor, boxShadow: `4px 4px 0 ${accentDark}` }}
+              >
+                {attemptsMade === 0
+                  ? `CHECK ANSWERS (${selections.filter(Boolean).length}/5 answered)`
+                  : `RECHECK WRONG ANSWERS (${5 - lockedCorrect.filter(Boolean).length} remaining)`}
+              </button>
+            )}
+
+            {/* Lock & proceed button — shown when eligible */}
+            {canProceed && (
+              <button
+                onClick={handleLock}
+                disabled={proceeding}
+                className="comic-panel w-full py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95 disabled:opacity-60 slide-up"
+                style={{
+                  background: hasBadge ? "hsl(48 100% 50%)" : "hsl(0 0% 45%)",
+                  color: hasBadge ? "hsl(0 0% 10%)" : "white",
+                  boxShadow: hasBadge ? "4px 4px 0 hsl(48 85% 28%)" : "4px 4px 0 hsl(0 0% 25%)",
+                }}
+              >
+                {proceeding
+                  ? "LOCKING..."
+                  : hasBadge
+                  ? "🏆 BADGE EARNED — LOCK PANEL →"
+                  : "LOCK PANEL (NO BADGE) →"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      <p className="mt-3 text-muted-foreground font-mono text-xs text-center tracking-widest">
+        {state.icon} {state.codeName.toUpperCase()} · {state.studentName}
+      </p>
     </div>
   );
 }

@@ -5,6 +5,7 @@ interface RoomMember {
   panelIndex: number;
   answers: (string | null)[];
   score: number | null;
+  hasBadge: boolean;
 }
 
 interface Room {
@@ -24,35 +25,49 @@ function roomKey(codeName: string, icon: string): string {
 
 const router = Router();
 
+router.get("/rooms/availability", (req, res) => {
+  const codeName = req.query.codeName as string | undefined;
+  const icon = req.query.icon as string | undefined;
+  if (!codeName || !icon) {
+    res.status(400).json({ error: "codeName and icon are required" });
+    return;
+  }
+  const key = roomKey(codeName, icon);
+  const room = rooms.get(key);
+  const takenPanels = room ? room.members.map((m) => m.panelIndex) : [];
+  res.json({ exists: !!room, memberCount: room?.members.length ?? 0, takenPanels });
+});
+
 router.post("/rooms/join", (req, res) => {
-  const { codeName, icon, studentName } = req.body as {
+  const { codeName, icon, studentName, panelIndex } = req.body as {
     codeName?: string;
     icon?: string;
     studentName?: string;
+    panelIndex?: number;
   };
-  if (!codeName || !icon || !studentName) {
-    res.status(400).json({ error: "codeName, icon, and studentName are required" });
+  if (!codeName || !icon || !studentName || panelIndex === undefined) {
+    res.status(400).json({ error: "codeName, icon, studentName, and panelIndex are required" });
+    return;
+  }
+  if (panelIndex < 0 || panelIndex > 3) {
+    res.status(400).json({ error: "panelIndex must be 0–3" });
     return;
   }
   const key = roomKey(codeName, icon);
   let room = rooms.get(key);
   if (!room) {
-    room = {
-      id: key,
-      codeName: codeName.trim(),
-      icon,
-      members: [],
-      verdict: null,
-      createdAt: Date.now(),
-    };
+    room = { id: key, codeName: codeName.trim(), icon, members: [], verdict: null, createdAt: Date.now() };
     rooms.set(key, room);
   }
   if (room.members.length >= 4) {
-    res.status(409).json({ error: "This squad is already full (4/4 detectives). Check your team code name and icon." });
+    res.status(409).json({ error: "This squad is already full (4/4 detectives)." });
     return;
   }
-  const panelIndex = room.members.length;
-  room.members.push({ studentName: studentName.trim(), panelIndex, answers: [], score: null });
+  if (room.members.some((m) => m.panelIndex === panelIndex)) {
+    res.status(409).json({ error: "That panel is already claimed by another detective. Pick a different one." });
+    return;
+  }
+  room.members.push({ studentName: studentName.trim(), panelIndex, answers: [], score: null, hasBadge: false });
   res.json({ roomId: key, panelIndex, memberCount: room.members.length });
 });
 
@@ -68,10 +83,12 @@ router.get("/rooms/:id/status", (req, res) => {
       studentName: m.studentName,
       panelIndex: m.panelIndex,
       submitted: m.score !== null,
+      hasBadge: m.hasBadge,
     })),
     allJoined: room.members.length >= 4,
     allSubmitted: room.members.length >= 4 && room.members.every((m) => m.score !== null),
     panelScores: room.members.map((m) => m.score),
+    panelBadges: room.members.map((m) => m.hasBadge),
     verdict: room.verdict,
   });
 });
@@ -82,10 +99,11 @@ router.post("/rooms/:id/submit", (req, res) => {
     res.status(404).json({ error: "Room not found" });
     return;
   }
-  const { panelIndex, score, answers } = req.body as {
+  const { panelIndex, score, answers, hasBadge } = req.body as {
     panelIndex?: number;
     score?: number;
     answers?: (string | null)[];
+    hasBadge?: boolean;
   };
   if (panelIndex === undefined || score === undefined) {
     res.status(400).json({ error: "panelIndex and score are required" });
@@ -98,6 +116,7 @@ router.post("/rooms/:id/submit", (req, res) => {
   }
   member.score = score;
   member.answers = answers ?? [];
+  member.hasBadge = hasBadge ?? false;
   res.json({ ok: true });
 });
 
