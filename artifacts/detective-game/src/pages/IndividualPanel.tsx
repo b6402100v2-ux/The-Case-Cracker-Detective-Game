@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
 import { CLUES } from "@/game/types";
 
@@ -21,9 +21,6 @@ export default function IndividualPanel() {
   const [attemptsMade, setAttemptsMade] = useState(0);
   const [lockedCorrect, setLockedCorrect] = useState<boolean[]>(clue.questions.map(() => false));
   const [showHint, setShowHint] = useState<boolean[]>(clue.questions.map(() => false));
-  const [lifelinesLeft, setLifelinesLeft] = useState(3);
-  const [fiftyFiftyUsed, setFiftyFiftyUsed] = useState<boolean[]>(clue.questions.map(() => false));
-  const [eliminatedOptions, setEliminatedOptions] = useState<Record<number, ("A" | "B" | "C")[]>>({});
   const [hasBadge, setHasBadge] = useState(false);
   const [proceeding, setProceeding] = useState(false);
 
@@ -35,11 +32,7 @@ export default function IndividualPanel() {
     if (timerExpired) return;
     const interval = setInterval(() => {
       setTimeLeft((t) => {
-        if (t <= 1) {
-          setTimerExpired(true);
-          clearInterval(interval);
-          return 0;
-        }
+        if (t <= 1) { setTimerExpired(true); clearInterval(interval); return 0; }
         return t - 1;
       });
     }, 1000);
@@ -58,18 +51,6 @@ export default function IndividualPanel() {
     if (newLocked.every(Boolean) && !timerExpired) setHasBadge(true);
   };
 
-  const handle5050 = useCallback((qIdx: number) => {
-    if (lifelinesLeft <= 0 || fiftyFiftyUsed[qIdx] || lockedCorrect[qIdx]) return;
-    const correct = clue.questions[qIdx].ans;
-    const wrongOpts = (["A", "B", "C"] as const).filter((k) => k !== correct && !(eliminatedOptions[qIdx] ?? []).includes(k));
-    if (wrongOpts.length === 0) return;
-    const toEliminate = wrongOpts[Math.floor(Math.random() * wrongOpts.length)];
-    setEliminatedOptions((prev) => ({ ...prev, [qIdx]: [...(prev[qIdx] ?? []), toEliminate] }));
-    setFiftyFiftyUsed((prev) => prev.map((v, i) => (i === qIdx ? true : v)));
-    setLifelinesLeft((l) => l - 1);
-    if (selections[qIdx] === toEliminate) selectAnswer(qIdx, correct);
-  }, [lifelinesLeft, fiftyFiftyUsed, lockedCorrect, eliminatedOptions, clue.questions, selections, selectAnswer]);
-
   const handleLock = async () => {
     setProceeding(true);
     const score = lockedCorrect.filter(Boolean).length;
@@ -82,17 +63,11 @@ export default function IndividualPanel() {
   const timerBg = timerExpired ? "hsl(0 0% 90%)" : timeLeft < 120 ? "hsl(354 78% 96%)" : timeLeft < 300 ? "hsl(48 100% 92%)" : "hsl(210 80% 95%)";
 
   const optionState = (qIdx: number, key: "A" | "B" | "C") => {
-    const eliminated = (eliminatedOptions[qIdx] ?? []).includes(key);
     const locked = lockedCorrect[qIdx];
     const selected = selections[qIdx] === key;
     const correct = clue.questions[qIdx].ans === key;
     const attempted = attemptsMade > 0;
-
-    if (eliminated) return "eliminated";
-    if (locked) {
-      if (correct) return "locked-correct";
-      return "locked-unchosen";
-    }
+    if (locked) return correct ? "locked-correct" : "locked-unchosen";
     if (attempted && selected && !correct) return "wrong";
     if (attempted && correct && selected) return "correct";
     if (selected) return "selected";
@@ -100,25 +75,22 @@ export default function IndividualPanel() {
   };
 
   const optionStyle = (s: string): { cls: string; style: React.CSSProperties } => {
-    const base = "border-2 px-4 py-2 font-mono text-sm flex items-center gap-3 transition-all duration-100";
+    const base = "border-2 px-4 py-2.5 font-mono text-sm flex items-center gap-3 transition-all duration-100 w-full text-left";
     switch (s) {
-      case "locked-correct": return { cls: `${base}`, style: { borderColor: "hsl(210 80% 40%)", background: "hsl(210 80% 95%)", color: "hsl(0 0% 10%)" } };
-      case "wrong": return { cls: `${base} cursor-pointer hover:translate-x-0.5`, style: { borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)", color: "hsl(0 0% 10%)" } };
-      case "selected": return { cls: `${base} cursor-pointer hover:translate-x-0.5 select-none`, style: { borderColor: accentColor, background: accentBg, color: "hsl(0 0% 10%)" } };
-      case "idle": return { cls: `${base} cursor-pointer hover:translate-x-0.5 select-none`, style: { borderColor: "hsl(0 0% 75%)", background: "white", color: "hsl(0 0% 30%)" } };
-      case "eliminated": return { cls: `${base} opacity-30 cursor-not-allowed line-through`, style: { borderColor: "hsl(0 0% 85%)", background: "hsl(0 0% 97%)", color: "hsl(0 0% 60%)" } };
-      default: return { cls: `${base}`, style: { borderColor: "hsl(0 0% 85%)", background: "hsl(0 0% 97%)", color: "hsl(0 0% 60%)" } };
+      case "locked-correct": return { cls: base, style: { borderColor: "hsl(210 80% 40%)", background: "hsl(210 80% 95%)", color: "hsl(0 0% 10%)" } };
+      case "wrong":          return { cls: `${base} cursor-pointer hover:translate-x-0.5`, style: { borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)", color: "hsl(0 0% 10%)" } };
+      case "selected":       return { cls: `${base} cursor-pointer hover:translate-x-0.5`, style: { borderColor: accentColor, background: accentBg, color: "hsl(0 0% 10%)" } };
+      case "idle":           return { cls: `${base} cursor-pointer hover:translate-x-0.5`, style: { borderColor: "hsl(0 0% 75%)", background: "white", color: "hsl(0 0% 25%)" } };
+      default:               return { cls: base, style: { borderColor: "hsl(0 0% 85%)", background: "hsl(0 0% 97%)", color: "hsl(0 0% 55%)" } };
     }
   };
 
   const optionIcon = (s: string) => {
     switch (s) {
-      case "locked-correct": return "✓";
-      case "wrong": return "✗";
-      case "selected": return "◉";
-      case "idle": return "○";
-      case "eliminated": return "—";
-      default: return "○";
+      case "locked-correct": return <span style={{ color: "hsl(210 80% 40%)" }}>✓</span>;
+      case "wrong":          return <span style={{ color: "hsl(354 78% 44%)" }}>✗</span>;
+      case "selected":       return <span style={{ color: accentColor }}>◉</span>;
+      default:               return <span style={{ color: "hsl(0 0% 60%)" }}>○</span>;
     }
   };
 
@@ -131,12 +103,11 @@ export default function IndividualPanel() {
         <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
       </div>
 
-      {/* Sticky HUD: timer + lifelines */}
+      {/* Sticky HUD: timer + badge */}
       <div className="sticky top-4 z-40 w-full max-w-2xl mb-4">
         <div className="comic-panel bg-card flex items-center justify-between px-4 py-2 gap-4">
-          {/* Timer */}
           <div className="flex items-center gap-2">
-            <div className="text-sm" style={{ color: timerColor }}>⏱</div>
+            <span style={{ color: timerColor }}>⏱</span>
             <div
               className="font-mono text-2xl font-black tracking-widest px-3 py-0.5 border-2"
               style={{ color: timerColor, background: timerBg, borderColor: timerColor, fontFamily: "'Bangers', cursive", minWidth: "80px", textAlign: "center" }}
@@ -148,32 +119,16 @@ export default function IndividualPanel() {
             </span>
           </div>
 
-          {/* Lifelines */}
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-muted-foreground tracking-widest uppercase hidden sm:block">50/50:</span>
-            <div className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="border-2 text-xs font-black px-2 py-0.5 font-mono"
-                  style={
-                    i < lifelinesLeft
-                      ? { borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)", color: "hsl(0 0% 10%)" }
-                      : { borderColor: "hsl(0 0% 80%)", background: "hsl(0 0% 96%)", color: "hsl(0 0% 70%)" }
-                  }
-                >
-                  {i < lifelinesLeft ? "50/50" : "✗"}
-                </div>
-              ))}
+          <div className="flex items-center gap-3">
+            <div className="font-mono text-xs text-muted-foreground text-right hidden sm:block">
+              <span>{lockedCorrect.filter(Boolean).length}/5 correct</span>
             </div>
+            {hasBadge && (
+              <div className="sfx-burst text-xs font-black px-3 py-1 animate-pulse" style={{ background: "hsl(48 100% 50%)", color: "hsl(0 0% 10%)" }}>
+                🏆 BADGE!
+              </div>
+            )}
           </div>
-
-          {/* Badge earned */}
-          {hasBadge && (
-            <div className="sfx-burst text-xs font-black px-3 py-1 animate-pulse" style={{ background: "hsl(48 100% 50%)", color: "hsl(0 0% 10%)" }}>
-              🏆 BADGE!
-            </div>
-          )}
         </div>
       </div>
 
@@ -194,11 +149,11 @@ export default function IndividualPanel() {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Diary entry */}
-          <div className="bg-muted border-2 border-foreground/15 p-4 font-mono text-xs leading-relaxed max-h-52 overflow-y-auto">
-            <p className="text-xs tracking-widest font-black text-muted-foreground uppercase mb-2">📖 Diary Entry — Read carefully:</p>
+          {/* Diary entry — bigger text */}
+          <div className="bg-muted border-2 border-foreground/15 p-4 max-h-64 overflow-y-auto">
+            <p className="text-xs tracking-widest font-black text-muted-foreground uppercase mb-3">📖 Diary Entry — Read carefully:</p>
             {clue.text.split("\n\n").map((para, i) => (
-              <p key={i} className="text-foreground/80 mb-2">{para}</p>
+              <p key={i} className="text-sm leading-relaxed text-foreground mb-3 font-mono">{para}</p>
             ))}
           </div>
 
@@ -229,62 +184,36 @@ export default function IndividualPanel() {
                 const locked = lockedCorrect[qIdx];
                 const attempted = attemptsMade > 0;
                 const isWrong = attempted && !locked && selections[qIdx] !== null && selections[qIdx] !== q.ans;
-                const can5050 = !locked && !fiftyFiftyUsed[qIdx] && lifelinesLeft > 0;
 
                 return (
-                  <div key={qIdx} className={`space-y-2 rounded-none transition-all duration-300 ${locked ? "opacity-80" : ""}`}>
-                    {/* Question header */}
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="font-mono text-sm font-bold text-foreground flex-1">
-                        <span className="font-black" style={{ color: locked ? "hsl(210 80% 40%)" : isWrong ? "hsl(354 78% 44%)" : accentColor }}>
-                          {qIdx + 1}.
-                        </span>{" "}
-                        {q.q}
-                        {locked && <span className="ml-2 font-mono text-xs" style={{ color: "hsl(210 80% 40%)" }}>✓ CORRECT</span>}
-                        {isWrong && <span className="ml-2 font-mono text-xs" style={{ color: "hsl(354 78% 44%)" }}>✗ TRY AGAIN</span>}
-                      </p>
-                      {can5050 && (
-                        <button
-                          onClick={() => handle5050(qIdx)}
-                          className="shrink-0 border-2 px-2 py-0.5 text-xs font-black font-mono hover:scale-105 active:scale-95 transition-all"
-                          style={{ borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)", color: "hsl(0 0% 10%)" }}
-                          title="Use 50/50 lifeline on this question"
-                        >
-                          50/50 🃏
-                        </button>
-                      )}
-                    </div>
+                  <div key={qIdx} className={`space-y-2 transition-all duration-300 ${locked ? "opacity-80" : ""}`}>
+                    <p className="font-mono text-sm font-bold text-foreground">
+                      <span className="font-black" style={{ color: locked ? "hsl(210 80% 40%)" : isWrong ? "hsl(354 78% 44%)" : accentColor }}>
+                        {qIdx + 1}.
+                      </span>{" "}
+                      {q.q}
+                      {locked && <span className="ml-2 font-mono text-xs" style={{ color: "hsl(210 80% 40%)" }}>✓ CORRECT</span>}
+                      {isWrong && <span className="ml-2 font-mono text-xs" style={{ color: "hsl(354 78% 44%)" }}>✗ TRY AGAIN</span>}
+                    </p>
 
-                    {/* Options */}
                     <div className="grid grid-cols-1 gap-1.5 pl-4">
                       {q.options.map((opt) => {
                         const s = optionState(qIdx, opt.key);
                         const { cls, style } = optionStyle(s);
-                        const isElim = s === "eliminated";
                         const isLocked = s === "locked-correct" || s === "locked-unchosen";
                         return (
                           <button
                             key={opt.key}
                             className={cls}
                             style={style}
-                            disabled={isElim || isLocked}
-                            onClick={() => {
-                              if (!isElim && !isLocked) selectAnswer(qIdx, opt.key);
-                            }}
+                            disabled={isLocked}
+                            onClick={() => { if (!isLocked) selectAnswer(qIdx, opt.key); }}
                           >
-                            <span
-                              className="font-black w-4 shrink-0"
-                              style={{ color: s === "locked-correct" ? "hsl(210 80% 40%)" : s === "wrong" ? "hsl(354 78% 44%)" : s === "selected" ? accentColor : "hsl(0 0% 60%)" }}
-                            >
-                              {optionIcon(s)}
-                            </span>
-                            <span
-                              className="font-black mr-1"
-                              style={{ color: s === "locked-correct" ? "hsl(210 80% 40%)" : s === "selected" ? accentColor : "hsl(0 0% 50%)" }}
-                            >
+                            <span className="w-4 shrink-0">{optionIcon(s)}</span>
+                            <span className="font-black shrink-0" style={{ color: s === "locked-correct" ? "hsl(210 80% 40%)" : s === "selected" ? accentColor : "hsl(0 0% 45%)" }}>
                               {opt.key})
                             </span>
-                            {opt.text}
+                            <span className="font-mono text-sm">{opt.text}</span>
                           </button>
                         );
                       })}
@@ -292,7 +221,7 @@ export default function IndividualPanel() {
 
                     {/* Hint */}
                     {showHint[qIdx] && (
-                      <div className="slide-up ml-4 border-l-4 pl-3 py-1 font-mono text-xs leading-relaxed" style={{ borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)" }}>
+                      <div className="slide-up ml-4 border-l-4 pl-3 py-2 font-mono text-sm leading-relaxed" style={{ borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)" }}>
                         <span className="font-black" style={{ color: "hsl(48 85% 28%)" }}>💡 HINT: </span>
                         <span className="text-foreground/80">{q.hint}</span>
                       </div>
@@ -313,7 +242,7 @@ export default function IndividualPanel() {
             </div>
           )}
 
-          {/* Timer expired banner */}
+          {/* Timer expired */}
           {timerExpired && !allCorrect && (
             <div className="slide-up border-4 p-3 text-center" style={{ borderColor: "hsl(0 0% 60%)", background: "hsl(0 0% 95%)" }}>
               <p className="font-black text-lg" style={{ fontFamily: "'Bangers', cursive", color: "hsl(0 0% 40%)" }}>
@@ -323,7 +252,7 @@ export default function IndividualPanel() {
             </div>
           )}
 
-          {/* Must fix errors message */}
+          {/* Fix errors message */}
           {attemptsMade > 0 && !allCorrect && !timerExpired && (
             <div className="border-2 p-3 text-center" style={{ borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)" }}>
               <p className="font-mono text-sm font-black" style={{ color: "hsl(354 78% 44%)" }}>
@@ -334,7 +263,6 @@ export default function IndividualPanel() {
 
           {/* Action buttons */}
           <div className="space-y-2">
-            {/* Check/Recheck button — shown while not all correct and timer not expired */}
             {!allCorrect && !timerExpired && (
               <button
                 onClick={handleCheck}
@@ -348,7 +276,6 @@ export default function IndividualPanel() {
               </button>
             )}
 
-            {/* Lock & proceed button — shown when eligible */}
             {canProceed && (
               <button
                 onClick={handleLock}
@@ -360,11 +287,7 @@ export default function IndividualPanel() {
                   boxShadow: hasBadge ? "4px 4px 0 hsl(48 85% 28%)" : "4px 4px 0 hsl(0 0% 25%)",
                 }}
               >
-                {proceeding
-                  ? "LOCKING..."
-                  : hasBadge
-                  ? "🏆 BADGE EARNED — LOCK PANEL →"
-                  : "LOCK PANEL (NO BADGE) →"}
+                {proceeding ? "LOCKING..." : hasBadge ? "🏆 BADGE EARNED — LOCK PANEL →" : "LOCK PANEL (NO BADGE) →"}
               </button>
             )}
           </div>

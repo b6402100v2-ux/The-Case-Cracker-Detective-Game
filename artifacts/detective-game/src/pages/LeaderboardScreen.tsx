@@ -51,6 +51,8 @@ export default function LeaderboardScreen({ onBack }: Props) {
   const [rooms, setRooms] = useState<LeaderRoom[]>([]);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -60,6 +62,16 @@ export default function LeaderboardScreen({ onBack }: Props) {
       setLastRefresh(new Date());
     } catch { /* silent */ }
     setLoading(false);
+  };
+
+  const handleDelete = async (roomId: string) => {
+    setDeleting(roomId);
+    try {
+      await fetch(`/api/rooms/${encodeURIComponent(roomId)}`, { method: "DELETE" });
+      setRooms((prev) => prev.filter((r) => r.roomId !== roomId));
+    } catch { /* silent */ }
+    setDeleting(null);
+    setConfirmDelete(null);
   };
 
   useEffect(() => {
@@ -152,9 +164,9 @@ export default function LeaderboardScreen({ onBack }: Props) {
                       <p className="font-mono text-xs text-white/80">{room.memberCount}/4 detectives</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
                     <div className="text-right">
-                      <div className="border-2 border-white/40 px-2 py-0.5 font-mono text-xs text-white" style={{ color: phase.color === "hsl(354 78% 44%)" || phase.color === "hsl(0 0% 55%)" ? "white" : "white" }}>
+                      <div className="border border-white/40 px-2 py-0.5 font-mono text-xs text-white">
                         {phase.label}
                       </div>
                     </div>
@@ -166,6 +178,33 @@ export default function LeaderboardScreen({ onBack }: Props) {
                         {rating.label}
                       </div>
                     </div>
+
+                    {/* Delete button */}
+                    {confirmDelete === room.roomId ? (
+                      <div className="flex gap-1 items-center ml-1">
+                        <button
+                          onClick={() => setConfirmDelete(null)}
+                          className="border border-white/50 text-white px-2 py-1 text-xs font-mono font-black uppercase hover:bg-white/20"
+                        >
+                          CANCEL
+                        </button>
+                        <button
+                          onClick={() => handleDelete(room.roomId)}
+                          disabled={deleting === room.roomId}
+                          className="bg-black/70 text-white px-2 py-1 text-xs font-mono font-black uppercase hover:bg-black"
+                        >
+                          {deleting === room.roomId ? "..." : "DELETE"}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(room.roomId)}
+                        className="border border-white/40 text-white/70 px-2 py-1 text-xs font-mono uppercase hover:text-white hover:border-white/80 hover:bg-black/30 transition-all ml-1"
+                        title="Delete this squad"
+                      >
+                        🗑
+                      </button>
+                    )}
                   </div>
                 </div>
 

@@ -233,6 +233,13 @@ router.get("/admin/leaderboard", (_req, res) => {
   res.json({ rooms: allRooms.sort((a, b) => b.totalBadges - a.totalBadges) });
 });
 
+router.delete("/rooms/:id", (req, res) => {
+  const key = decodeURIComponent(req.params.id);
+  if (!rooms.has(key)) { res.status(404).json({ error: "Room not found" }); return; }
+  rooms.delete(key);
+  res.json({ ok: true });
+});
+
 router.post("/rooms/:id/verdict", (req, res) => {
   const room = rooms.get(decodeURIComponent(req.params.id));
   if (!room) { res.status(404).json({ error: "Room not found" }); return; }
