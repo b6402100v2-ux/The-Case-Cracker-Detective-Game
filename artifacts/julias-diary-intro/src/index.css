@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #CC0000;
+  --color-secondary: #003399;
+  --color-accent: #FFD700;
+
+  --color-bg-light: #1A1A1A;
+  --color-bg-dark: #0A0A0A;
+  --color-bg-muted: #2A2A2A;
+
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #FFD700;
+  --color-text-muted: #A0A0A0;
+  --color-text-inverse: #000000;
+
+  --font-display: 'Bangers', system-ui;
+  --font-body: 'Comic Neue', cursive;
+  --font-mono: 'Courier New', monospace;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-bg-light: var(--color-bg-light);
+  --color-bg-dark: var(--color-bg-dark);
+  --color-bg-muted: var(--color-bg-muted);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-inverse: var(--color-text-inverse);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary);
+}
+
+/* Comic book dot pattern overlay */
+.comic-dots {
+  background-image: radial-gradient(var(--color-bg-light) 15%, transparent 16%),
+  radial-gradient(var(--color-bg-light) 15%, transparent 16%);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+  opacity: 0.1;
+}
+
+/* Heavy stroke text */
+.text-stroke {
+  -webkit-text-stroke: 2px #000000;
+  text-stroke: 2px #000000;
+}
+.text-stroke-thick {
+  -webkit-text-stroke: 4px #000000;
+  text-stroke: 4px #000000;
+  paint-order: stroke fill;
+}

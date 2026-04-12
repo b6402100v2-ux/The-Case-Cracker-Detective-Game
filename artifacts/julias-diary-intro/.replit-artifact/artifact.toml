@@ -1,0 +1,31 @@
+kind = "video"
+previewPath = "/julias-diary-intro/"
+title = "Julia's Diary – Case Intro"
+version = "1.0.0"
+id = "artifacts/julias-diary-intro"
+router = "path"
+
+[[integratedSkills]]
+name = "video-js"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/julias-diary-intro/" ]
+localPort = 19401
+
+[services.development]
+run = "pnpm --filter @workspace/julias-diary-intro run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/julias-diary-intro", "run", "build" ]
+publicDir = "artifacts/julias-diary-intro/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19401"
+BASE_PATH = "/julias-diary-intro/"

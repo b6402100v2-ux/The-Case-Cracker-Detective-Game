@@ -42,6 +42,30 @@ uri = "file://artifacts/case-3-intro/public/images/detective_badge.png"
 type = "image"
 title = "Detective badge with diamond"
 
+[[generated]]
+id = "tVGA1Ul_Bt9_Ts-XgVTw6"
+uri = "file://artifacts/julias-diary-intro/public/images/diary_spotlight.png"
+type = "image"
+title = "Diary on a desk"
+
+[[generated]]
+id = "KpFHL7xc1SqXox755pCLE"
+uri = "file://artifacts/julias-diary-intro/public/images/handwriting_texture.png"
+type = "image"
+title = "Handwriting texture"
+
+[[generated]]
+id = "a-UGPFWJHx7s2dmhG7Cd0"
+uri = "file://artifacts/julias-diary-intro/public/images/comic_elements.png"
+type = "image"
+title = "Comic thought bubbles"
+
+[[generated]]
+id = "265krnmj4I8pWL72s8wRK"
+uri = "file://artifacts/julias-diary-intro/public/images/detective_badge.png"
+type = "image"
+title = "Detective badge"
+
 [[outputs]]
 id = "rx2NlsnACggQK8GrZBGn9"
 uri = "file://artifacts/detective-game/public/diary-panel-1.png"
