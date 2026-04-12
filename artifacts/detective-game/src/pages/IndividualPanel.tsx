@@ -6,9 +6,8 @@ const PANEL_MINUTES = 10;
 const TOTAL_SECONDS = PANEL_MINUTES * 60;
 
 export default function IndividualPanel() {
-  const { state, selectAnswer, submitPanel } = useGame();
+  const { state, submitPanel } = useGame();
   const clue = CLUES[state.panelIndex];
-  const selections = state.panelSelections;
 
   const idx = state.panelIndex;
   const accentColor = ["hsl(354 78% 44%)", "hsl(210 80% 40%)", "hsl(48 100% 50%)", "hsl(354 78% 44%)"][idx];
@@ -18,16 +17,19 @@ export default function IndividualPanel() {
 
   const [timeLeft, setTimeLeft] = useState(TOTAL_SECONDS);
   const [timerExpired, setTimerExpired] = useState(false);
-  const [attemptsMade, setAttemptsMade] = useState(0);
-  const [lockedCorrect, setLockedCorrect] = useState<boolean[]>(clue.questions.map(() => false));
-  const [showHint, setShowHint] = useState<boolean[]>(clue.questions.map(() => false));
+
+  const [passedCount, setPassedCount] = useState(0);
+  const [localAnswer, setLocalAnswer] = useState<"A" | "B" | "C" | "D" | null>(null);
+  const [showHint, setShowHint] = useState(false);
+  const [justWrong, setJustWrong] = useState(false);
+  const [neverWrong, setNeverWrong] = useState(true);
   const [hasBadge, setHasBadge] = useState(false);
   const [proceeding, setProceeding] = useState(false);
   const [showTip, setShowTip] = useState(true);
 
-  const allCorrect = lockedCorrect.every(Boolean);
-  const canProceed = allCorrect || timerExpired;
-  const canCheck = clue.questions.every((_, i) => lockedCorrect[i] || selections[i] !== null);
+  const allDone = passedCount === clue.questions.length;
+  const canProceed = allDone || timerExpired;
+  const currentQ = clue.questions[passedCount];
 
   useEffect(() => {
     if (timerExpired) return;
@@ -41,21 +43,31 @@ export default function IndividualPanel() {
   }, [timerExpired]);
 
   const handleCheck = () => {
-    const newLocked = lockedCorrect.map((was, i) => was || selections[i] === clue.questions[i].ans);
-    const newHint = clue.questions.map((q, i) => {
-      if (newLocked[i]) return false;
-      return selections[i] !== null && selections[i] !== q.ans;
-    });
-    setLockedCorrect(newLocked);
-    setShowHint(newHint);
-    setAttemptsMade((a) => a + 1);
-    if (newLocked.every(Boolean) && !timerExpired) setHasBadge(true);
+    if (!localAnswer || !currentQ) return;
+    if (localAnswer === currentQ.ans) {
+      const newPassed = passedCount + 1;
+      setPassedCount(newPassed);
+      setLocalAnswer(null);
+      setShowHint(false);
+      setJustWrong(false);
+      if (newPassed === clue.questions.length && neverWrong) setHasBadge(true);
+    } else {
+      setShowHint(true);
+      setJustWrong(true);
+      setNeverWrong(false);
+    }
+  };
+
+  const handleRestart = () => {
+    setPassedCount(0);
+    setLocalAnswer(null);
+    setShowHint(false);
+    setJustWrong(false);
   };
 
   const handleLock = async () => {
     setProceeding(true);
-    const score = lockedCorrect.filter(Boolean).length;
-    await submitPanel(score, hasBadge);
+    await submitPanel(passedCount, hasBadge);
   };
 
   const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
@@ -63,57 +75,23 @@ export default function IndividualPanel() {
   const timerColor = timerExpired ? "hsl(0 0% 50%)" : timeLeft < 120 ? "hsl(354 78% 44%)" : timeLeft < 300 ? "hsl(48 100% 40%)" : "hsl(210 80% 40%)";
   const timerBg = timerExpired ? "hsl(0 0% 90%)" : timeLeft < 120 ? "hsl(354 78% 96%)" : timeLeft < 300 ? "hsl(48 100% 92%)" : "hsl(210 80% 95%)";
 
-  const optionState = (qIdx: number, key: "A" | "B" | "C" | "D") => {
-    const locked = lockedCorrect[qIdx];
-    const selected = selections[qIdx] === key;
-    const correct = clue.questions[qIdx].ans === key;
-    const attempted = attemptsMade > 0;
-    if (locked) return correct ? "locked-correct" : "locked-unchosen";
-    if (attempted && selected && !correct) return "wrong";
-    if (attempted && correct && selected) return "correct";
-    if (selected) return "selected";
-    return "idle";
-  };
-
-  const optionStyle = (s: string): { cls: string; style: React.CSSProperties } => {
-    const base = "border-2 px-4 py-2.5 font-mono text-sm flex items-center gap-3 transition-all duration-100 w-full text-left";
-    switch (s) {
-      case "locked-correct": return { cls: base, style: { borderColor: "hsl(210 80% 40%)", background: "hsl(210 80% 95%)", color: "hsl(0 0% 10%)" } };
-      case "wrong":          return { cls: `${base} cursor-pointer hover:translate-x-0.5`, style: { borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)", color: "hsl(0 0% 10%)" } };
-      case "selected":       return { cls: `${base} cursor-pointer hover:translate-x-0.5`, style: { borderColor: accentColor, background: accentBg, color: "hsl(0 0% 10%)" } };
-      case "idle":           return { cls: `${base} cursor-pointer hover:translate-x-0.5`, style: { borderColor: "hsl(0 0% 75%)", background: "white", color: "hsl(0 0% 25%)" } };
-      default:               return { cls: base, style: { borderColor: "hsl(0 0% 85%)", background: "hsl(0 0% 97%)", color: "hsl(0 0% 55%)" } };
-    }
-  };
-
-  const optionIcon = (s: string) => {
-    switch (s) {
-      case "locked-correct": return <span style={{ color: "hsl(210 80% 40%)" }}>✓</span>;
-      case "wrong":          return <span style={{ color: "hsl(354 78% 44%)" }}>✗</span>;
-      case "selected":       return <span style={{ color: accentColor }}>◉</span>;
-      default:               return <span style={{ color: "hsl(0 0% 60%)" }}>○</span>;
-    }
-  };
-
   return (
     <div className="min-h-screen halftone-bg flex flex-col items-center py-5 px-4">
+
       {/* Main Idea Tip Modal */}
       {showTip && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
           <div className="comic-panel bg-card max-w-sm w-full overflow-hidden" style={{ border: "4px solid hsl(0 0% 10%)" }}>
-            {/* Header */}
             <div className="border-b-4 border-foreground px-5 py-3 text-center" style={{ background: "hsl(354 78% 44%)" }}>
               <p className="font-mono text-xs text-white/75 uppercase tracking-widest">Detective Strategy</p>
               <h2 className="text-3xl font-black text-white tracking-widest leading-none" style={{ fontFamily: "'Bangers', cursive" }}>
                 🔍 FIND THE MAIN IDEA
               </h2>
             </div>
-
             <div className="p-5 space-y-4">
               <p className="font-mono text-sm leading-relaxed text-foreground">
                 Before answering, read Maya's diary entry once all the way through. Then ask yourself:
               </p>
-
               <div className="space-y-2">
                 {[
                   { icon: "❓", tip: "What is this mostly about?", sub: "One sentence that covers the whole entry, not just one detail." },
@@ -129,13 +107,11 @@ export default function IndividualPanel() {
                   </div>
                 ))}
               </div>
-
               <div className="border-4 border-foreground px-4 py-2 text-center" style={{ background: "hsl(48 100% 50%)" }}>
                 <p className="font-mono text-xs font-black tracking-widest uppercase" style={{ color: "hsl(0 0% 10%)" }}>
-                  💡 The questions test whether you found the main idea — not just random facts.
+                  ⚠️ Get a question wrong and you restart from Question 1!
                 </p>
               </div>
-
               <button
                 onClick={() => setShowTip(false)}
                 className="comic-panel w-full py-3 text-lg font-black tracking-widest uppercase text-white hover:translate-x-0.5 hover:translate-y-0.5 transition-all active:scale-95"
@@ -155,7 +131,7 @@ export default function IndividualPanel() {
         <div className="flex-1" style={{ background: "hsl(354 78% 44%)" }} />
       </div>
 
-      {/* Sticky HUD: timer + badge */}
+      {/* Sticky HUD: timer */}
       <div className="sticky top-4 z-40 w-full max-w-2xl mb-4">
         <div className="comic-panel bg-card flex items-center justify-between px-4 py-2 gap-4">
           <div className="flex items-center gap-2">
@@ -170,11 +146,7 @@ export default function IndividualPanel() {
               {timerExpired ? "You may lock your panel" : "remaining"}
             </span>
           </div>
-
           <div className="flex items-center gap-3">
-            <div className="font-mono text-xs text-muted-foreground text-right hidden sm:block">
-              <span>{lockedCorrect.filter(Boolean).length}/5 correct</span>
-            </div>
             {hasBadge && (
               <div className="sfx-burst text-xs font-black px-3 py-1 animate-pulse" style={{ background: "hsl(48 100% 50%)", color: "hsl(0 0% 10%)" }}>
                 🏆 BADGE!
@@ -201,7 +173,7 @@ export default function IndividualPanel() {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Diary entry — bigger text */}
+          {/* Diary entry */}
           <div className="bg-muted border-2 border-foreground/15 p-4 max-h-64 overflow-y-auto">
             <p className="text-xs tracking-widest font-black text-muted-foreground uppercase mb-3">📖 Diary Entry — Read carefully:</p>
             {clue.text.split("\n\n").map((para, i) => (
@@ -209,140 +181,177 @@ export default function IndividualPanel() {
             ))}
           </div>
 
-          {/* Progress bar */}
+          {/* Progress dots */}
           <div>
-            <div className="flex justify-between font-mono text-xs text-muted-foreground mb-1">
-              <span>{lockedCorrect.filter(Boolean).length}/5 correct</span>
-              <span>{attemptsMade > 0 ? `${attemptsMade} attempt${attemptsMade !== 1 ? "s" : ""}` : "Not checked yet"}</span>
+            <div className="flex items-center justify-between mb-2">
+              <p className="font-mono text-xs font-black tracking-widest uppercase" style={{ color: accentColor }}>
+                Progress
+              </p>
+              <span className="font-mono text-xs text-muted-foreground">{passedCount}/5 correct</span>
             </div>
-            <div className="h-2 border-2 border-foreground/20 bg-muted overflow-hidden">
-              <div
-                className="h-full transition-all duration-500"
-                style={{
-                  width: `${(lockedCorrect.filter(Boolean).length / 5) * 100}%`,
-                  background: allCorrect ? "hsl(210 80% 40%)" : accentColor,
-                }}
-              />
+            <div className="flex gap-2">
+              {clue.questions.map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 h-3 border-2 transition-all duration-300"
+                  style={{
+                    borderColor: i < passedCount ? "hsl(210 80% 40%)" : i === passedCount ? accentColor : "hsl(0 0% 75%)",
+                    background: i < passedCount ? "hsl(210 80% 40%)" : i === passedCount ? accentBg : "white",
+                  }}
+                />
+              ))}
+            </div>
+            <div className="flex gap-2 mt-0.5">
+              {clue.questions.map((_, i) => (
+                <div key={i} className="flex-1 text-center font-mono text-xs" style={{ color: i < passedCount ? "hsl(210 80% 40%)" : i === passedCount ? accentColor : "hsl(0 0% 70%)" }}>
+                  {i < passedCount ? "✓" : i === passedCount ? "▶" : "○"}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Questions */}
-          <div>
-            <p className="text-xs font-mono font-black tracking-widest uppercase mb-3" style={{ color: accentColor }}>
-              ▶ Answer All 5 Questions:
-            </p>
-            <div className="space-y-5">
-              {clue.questions.map((q, qIdx) => {
-                const locked = lockedCorrect[qIdx];
-                const attempted = attemptsMade > 0;
-                const isWrong = attempted && !locked && selections[qIdx] !== null && selections[qIdx] !== q.ans;
-
-                return (
-                  <div key={qIdx} className={`space-y-2 transition-all duration-300 ${locked ? "opacity-80" : ""}`}>
-                    <p className="font-mono text-sm font-bold text-foreground">
-                      <span className="font-black" style={{ color: locked ? "hsl(210 80% 40%)" : isWrong ? "hsl(354 78% 44%)" : accentColor }}>
-                        {qIdx + 1}.
-                      </span>{" "}
-                      {q.q}
-                      {locked && <span className="ml-2 font-mono text-xs" style={{ color: "hsl(210 80% 40%)" }}>✓ CORRECT</span>}
-                      {isWrong && <span className="ml-2 font-mono text-xs" style={{ color: "hsl(354 78% 44%)" }}>✗ TRY AGAIN</span>}
-                    </p>
-
-                    <div className="grid grid-cols-1 gap-1.5 pl-4">
-                      {q.options.map((opt) => {
-                        const s = optionState(qIdx, opt.key);
-                        const { cls, style } = optionStyle(s);
-                        const isLocked = s === "locked-correct" || s === "locked-unchosen";
-                        return (
-                          <button
-                            key={opt.key}
-                            className={cls}
-                            style={style}
-                            disabled={isLocked}
-                            onClick={() => { if (!isLocked) selectAnswer(qIdx, opt.key); }}
-                          >
-                            <span className="w-4 shrink-0">{optionIcon(s)}</span>
-                            <span className="font-black shrink-0" style={{ color: s === "locked-correct" ? "hsl(210 80% 40%)" : s === "selected" ? accentColor : "hsl(0 0% 45%)" }}>
-                              {opt.key})
-                            </span>
-                            <span className="font-mono text-sm">{opt.text}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Hint */}
-                    {showHint[qIdx] && (
-                      <div className="slide-up ml-4 border-l-4 pl-3 py-2 font-mono text-sm leading-relaxed" style={{ borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)" }}>
-                        <span className="font-black" style={{ color: "hsl(48 85% 28%)" }}>💡 HINT: </span>
-                        <span className="text-foreground/80">{q.hint}</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Badge earned banner */}
-          {hasBadge && (
-            <div className="slide-up border-4 border-foreground p-4 text-center" style={{ background: "hsl(48 100% 50%)" }}>
-              <p className="text-3xl font-black tracking-widest" style={{ fontFamily: "'Bangers', cursive", color: "hsl(0 0% 10%)" }}>
-                🏆 DETECTIVE BADGE EARNED!
-              </p>
-              <p className="font-mono text-sm mt-1">You got 5/5 correct — excellent detective work!</p>
-            </div>
-          )}
-
-          {/* Timer expired */}
-          {timerExpired && !allCorrect && (
-            <div className="slide-up border-4 p-3 text-center" style={{ borderColor: "hsl(0 0% 60%)", background: "hsl(0 0% 95%)" }}>
-              <p className="font-black text-lg" style={{ fontFamily: "'Bangers', cursive", color: "hsl(0 0% 40%)" }}>
-                ⏱ TIME'S UP — You may proceed without the badge.
-              </p>
-              <p className="font-mono text-xs text-muted-foreground mt-0.5">Score: {lockedCorrect.filter(Boolean).length}/5 correct</p>
-            </div>
-          )}
-
-          {/* Fix errors message */}
-          {attemptsMade > 0 && !allCorrect && !timerExpired && (
-            <div className="border-2 p-3 text-center" style={{ borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)" }}>
-              <p className="font-mono text-sm font-black" style={{ color: "hsl(354 78% 44%)" }}>
-                ✗ Fix highlighted questions to earn your badge and proceed.
-              </p>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="space-y-2">
-            {!allCorrect && !timerExpired && (
-              <button
-                onClick={handleCheck}
-                disabled={!canCheck}
-                className="comic-panel w-full text-white py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95 disabled:opacity-50"
-                style={{ background: accentColor, boxShadow: `4px 4px 0 ${accentDark}` }}
-              >
-                {attemptsMade === 0
-                  ? `CHECK ANSWERS (${selections.filter(Boolean).length}/5 answered)`
-                  : `RECHECK WRONG ANSWERS (${5 - lockedCorrect.filter(Boolean).length} remaining)`}
-              </button>
-            )}
-
-            {canProceed && (
+          {/* ── All done ── */}
+          {allDone && (
+            <div className="space-y-4">
+              {hasBadge ? (
+                <div className="slide-up border-4 border-foreground p-4 text-center" style={{ background: "hsl(48 100% 50%)" }}>
+                  <p className="text-3xl font-black tracking-widest" style={{ fontFamily: "'Bangers', cursive", color: "hsl(0 0% 10%)" }}>
+                    🏆 DETECTIVE BADGE EARNED!
+                  </p>
+                  <p className="font-mono text-sm mt-1">You got 5/5 correct with no wrong answers — outstanding!</p>
+                </div>
+              ) : (
+                <div className="slide-up border-4 border-foreground p-4 text-center" style={{ background: "hsl(210 80% 95%)" }}>
+                  <p className="text-2xl font-black tracking-widest" style={{ fontFamily: "'Bangers', cursive", color: "hsl(210 80% 40%)" }}>
+                    ✓ ALL 5 CORRECT!
+                  </p>
+                  <p className="font-mono text-sm mt-1 text-muted-foreground">Good work — you can now lock your panel.</p>
+                </div>
+              )}
               <button
                 onClick={handleLock}
                 disabled={proceeding}
                 className="comic-panel w-full py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95 disabled:opacity-60 slide-up"
                 style={{
-                  background: hasBadge ? "hsl(48 100% 50%)" : "hsl(0 0% 45%)",
+                  background: hasBadge ? "hsl(48 100% 50%)" : "hsl(210 80% 40%)",
                   color: hasBadge ? "hsl(0 0% 10%)" : "white",
-                  boxShadow: hasBadge ? "4px 4px 0 hsl(48 85% 28%)" : "4px 4px 0 hsl(0 0% 25%)",
+                  boxShadow: hasBadge ? "4px 4px 0 hsl(48 85% 28%)" : "4px 4px 0 hsl(210 80% 25%)",
                 }}
               >
-                {proceeding ? "LOCKING..." : hasBadge ? "🏆 BADGE EARNED — LOCK PANEL →" : "LOCK PANEL (NO BADGE) →"}
+                {proceeding ? "LOCKING..." : hasBadge ? "🏆 BADGE EARNED — LOCK PANEL →" : "LOCK PANEL →"}
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* ── Timer expired mid-game ── */}
+          {timerExpired && !allDone && (
+            <div className="space-y-3">
+              <div className="slide-up border-4 p-3 text-center" style={{ borderColor: "hsl(0 0% 60%)", background: "hsl(0 0% 95%)" }}>
+                <p className="font-black text-lg" style={{ fontFamily: "'Bangers', cursive", color: "hsl(0 0% 40%)" }}>
+                  ⏱ TIME'S UP — You may proceed without the badge.
+                </p>
+                <p className="font-mono text-xs text-muted-foreground mt-0.5">Score: {passedCount}/5 correct</p>
+              </div>
+              <button
+                onClick={handleLock}
+                disabled={proceeding}
+                className="comic-panel w-full py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95 disabled:opacity-60"
+                style={{ background: "hsl(0 0% 45%)", color: "white", boxShadow: "4px 4px 0 hsl(0 0% 25%)" }}
+              >
+                {proceeding ? "LOCKING..." : "LOCK PANEL (NO BADGE) →"}
+              </button>
+            </div>
+          )}
+
+          {/* ── Active question ── */}
+          {!allDone && !timerExpired && currentQ && (
+            <div className="space-y-4">
+              {/* Question number badge */}
+              <div className="flex items-center gap-3">
+                <div
+                  className="shrink-0 w-9 h-9 border-4 border-foreground flex items-center justify-center font-black text-lg"
+                  style={{ fontFamily: "'Bangers', cursive", background: accentColor, color: accentText }}
+                >
+                  {passedCount + 1}
+                </div>
+                <p className="font-mono text-sm font-bold text-foreground leading-snug">{currentQ.q}</p>
+              </div>
+
+              {/* Options */}
+              <div className="grid grid-cols-1 gap-2 pl-0">
+                {currentQ.options.map((opt) => {
+                  const isSelected = localAnswer === opt.key;
+                  const isWrong = justWrong && isSelected;
+                  return (
+                    <button
+                      key={opt.key}
+                      disabled={justWrong}
+                      onClick={() => { if (!justWrong) setLocalAnswer(opt.key); }}
+                      className="border-2 px-4 py-2.5 font-mono text-sm flex items-center gap-3 transition-all duration-100 w-full text-left hover:translate-x-0.5 disabled:cursor-default"
+                      style={
+                        isWrong
+                          ? { borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)", color: "hsl(0 0% 10%)" }
+                          : isSelected
+                          ? { borderColor: accentColor, background: accentBg, color: "hsl(0 0% 10%)" }
+                          : { borderColor: "hsl(0 0% 75%)", background: "white", color: "hsl(0 0% 25%)" }
+                      }
+                    >
+                      <span className="w-4 shrink-0">
+                        {isWrong
+                          ? <span style={{ color: "hsl(354 78% 44%)" }}>✗</span>
+                          : isSelected
+                          ? <span style={{ color: accentColor }}>◉</span>
+                          : <span style={{ color: "hsl(0 0% 60%)" }}>○</span>}
+                      </span>
+                      <span className="font-black shrink-0" style={{ color: isSelected ? accentColor : "hsl(0 0% 45%)" }}>
+                        {opt.key})
+                      </span>
+                      <span className="font-mono text-sm">{opt.text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Hint (shown on wrong) */}
+              {showHint && (
+                <div className="slide-up border-l-4 pl-3 py-2 font-mono text-sm leading-relaxed" style={{ borderColor: "hsl(48 100% 40%)", background: "hsl(48 100% 92%)" }}>
+                  <span className="font-black" style={{ color: "hsl(48 85% 28%)" }}>💡 HINT: </span>
+                  <span className="text-foreground/80">{currentQ.hint}</span>
+                </div>
+              )}
+
+              {/* Wrong answer — restart prompt */}
+              {justWrong && (
+                <div className="slide-up space-y-3">
+                  <div className="border-4 p-3 text-center" style={{ borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)" }}>
+                    <p className="font-black text-base tracking-wide" style={{ fontFamily: "'Bangers', cursive", color: "hsl(354 78% 44%)", fontSize: "1.25rem" }}>
+                      ✗ WRONG ANSWER — READ THE HINT AND TRY AGAIN
+                    </p>
+                    <p className="font-mono text-xs text-muted-foreground mt-1">You must restart from Question 1.</p>
+                  </div>
+                  <button
+                    onClick={handleRestart}
+                    className="comic-panel w-full py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all active:scale-95"
+                    style={{ background: "hsl(354 78% 44%)", color: "white", boxShadow: "4px 4px 0 hsl(354 78% 28%)" }}
+                  >
+                    ↩ RESTART FROM QUESTION 1
+                  </button>
+                </div>
+              )}
+
+              {/* Check button (only when answer selected and not yet wrong) */}
+              {!justWrong && (
+                <button
+                  onClick={handleCheck}
+                  disabled={!localAnswer}
+                  className="comic-panel w-full text-white py-3 text-lg font-black tracking-widest uppercase hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: accentColor, boxShadow: `4px 4px 0 ${accentDark}` }}
+                >
+                  {localAnswer ? "CHECK ANSWER →" : "SELECT AN ANSWER ABOVE"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
