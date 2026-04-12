@@ -31,6 +31,13 @@ export default function IndividualPanel() {
   const canProceed = allDone || timerExpired;
   const currentQ = clue.questions[passedCount];
 
+  const diaryImages = [
+    "/diary-panel-1.png",
+    "/diary-panel-2.png",
+    "/diary-panel-3.png",
+    "/diary-panel-4.png",
+  ];
+
   useEffect(() => {
     if (timerExpired) return;
     const interval = setInterval(() => {
@@ -173,8 +180,17 @@ export default function IndividualPanel() {
         </div>
 
         <div className="p-5 space-y-5">
+          {/* Diary illustration */}
+          <div className="border-2 border-foreground/20 overflow-hidden" style={{ aspectRatio: "4/3", maxHeight: "220px" }}>
+            <img
+              src={diaryImages[idx]}
+              alt={`Illustration for ${clue.date}: ${clue.loc}`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
           {/* Diary entry */}
-          <div className="bg-muted border-2 border-foreground/15 p-4 max-h-64 overflow-y-auto">
+          <div className="bg-muted border-2 border-foreground/15 p-4 max-h-56 overflow-y-auto">
             <p className="text-xs tracking-widest font-black text-muted-foreground uppercase mb-3">📖 Diary Entry — Read carefully:</p>
             {clue.text.split("\n\n").map((para, i) => (
               <p key={i} className="text-sm leading-relaxed text-foreground mb-3 font-mono">{para}</p>

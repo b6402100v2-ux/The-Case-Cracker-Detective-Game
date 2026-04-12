@@ -1,0 +1,49 @@
+uploads = []
+
+[[generated]]
+id = "F6Tmv_AW099FIrApm_ZBR"
+uri = "file://artifacts/detective-game/public/diary-panel-1.png"
+type = "image"
+title = "dinner table family scene"
+
+[[generated]]
+id = "0IBJSIe5ncjcH0cFvamrV"
+uri = "file://artifacts/detective-game/public/diary-panel-2.png"
+type = "image"
+title = "art room school scene"
+
+[[generated]]
+id = "zUbq0KTYaR4pcPul95VE-"
+uri = "file://artifacts/detective-game/public/diary-panel-3.png"
+type = "image"
+title = "pier romantic date scene"
+
+[[generated]]
+id = "hatPJkEfs8grXnS8mQU5C"
+uri = "file://artifacts/detective-game/public/diary-panel-4.png"
+type = "image"
+title = "cyberbullying digital storm"
+
+[[outputs]]
+id = "rx2NlsnACggQK8GrZBGn9"
+uri = "file://artifacts/detective-game/public/diary-panel-1.png"
+type = "image"
+title = "Panel 1 — The Dinner Table (Oct 14th)"
+
+[[outputs]]
+id = "s_PAhehkvVfpVluMaBgof"
+uri = "file://artifacts/detective-game/public/diary-panel-2.png"
+type = "image"
+title = "Panel 2 — The Art Room (Oct 17th)"
+
+[[outputs]]
+id = "jKM8TSJpzIRtRH728PXPd"
+uri = "file://artifacts/detective-game/public/diary-panel-3.png"
+type = "image"
+title = "Panel 3 — The Last Date (Oct 20th)"
+
+[[outputs]]
+id = "KGVVB5BNH5PMkNqvUT8Ax"
+uri = "file://artifacts/detective-game/public/diary-panel-4.png"
+type = "image"
+title = "Panel 4 — The Final Storm (Oct 23rd)"
