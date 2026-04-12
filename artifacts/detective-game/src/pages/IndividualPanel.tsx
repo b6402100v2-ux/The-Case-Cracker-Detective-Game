@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useGame } from "@/game/GameContext";
 import { CLUES } from "@/game/types";
 
@@ -26,6 +26,40 @@ export default function IndividualPanel() {
   const [hasBadge, setHasBadge] = useState(false);
   const [proceeding, setProceeding] = useState(false);
   const [showTip, setShowTip] = useState(true);
+  const [isReading, setIsReading] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const stopSpeech = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setIsReading(false);
+    setIsPaused(false);
+  }, []);
+
+  const handleListen = useCallback(() => {
+    if (isReading && !isPaused) {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+      return;
+    }
+    if (isReading && isPaused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(clue.text.replace(/\n\n/g, ". "));
+    utt.rate = 0.92;
+    utt.pitch = 1.05;
+    utt.lang = "en-US";
+    utt.onstart = () => { setIsReading(true); setIsPaused(false); };
+    utt.onend = () => { setIsReading(false); setIsPaused(false); };
+    utt.onerror = () => { setIsReading(false); setIsPaused(false); };
+    utteranceRef.current = utt;
+    window.speechSynthesis.speak(utt);
+  }, [clue.text, isReading, isPaused]);
+
+  useEffect(() => () => { window.speechSynthesis.cancel(); }, []);
 
   const allDone = passedCount === clue.questions.length;
   const canProceed = allDone || timerExpired;
@@ -187,6 +221,42 @@ export default function IndividualPanel() {
               alt={`Illustration for ${clue.date}: ${clue.loc}`}
               className="w-full h-full object-cover"
             />
+          </div>
+
+          {/* Audio controls */}
+          <div className="flex items-center gap-2 border-2 border-foreground/15 px-3 py-2" style={{ background: "hsl(0 0% 97%)" }}>
+            <span className="font-mono text-xs font-black tracking-widest uppercase text-muted-foreground shrink-0">🎧 LISTEN:</span>
+            <button
+              onClick={handleListen}
+              className="flex items-center gap-1.5 px-3 py-1 border-2 font-mono text-xs font-black tracking-widest uppercase transition-all hover:translate-x-0.5 active:scale-95"
+              style={
+                isReading && !isPaused
+                  ? { borderColor: accentColor, background: accentBg, color: accentColor }
+                  : { borderColor: "hsl(0 0% 60%)", background: "white", color: "hsl(0 0% 30%)" }
+              }
+            >
+              {!isReading && <><span>▶</span><span>PLAY DIARY</span></>}
+              {isReading && !isPaused && <><span className="animate-pulse">⏸</span><span>PAUSE</span></>}
+              {isReading && isPaused && <><span>▶</span><span>RESUME</span></>}
+            </button>
+            {isReading && (
+              <button
+                onClick={stopSpeech}
+                className="flex items-center gap-1.5 px-3 py-1 border-2 font-mono text-xs font-black tracking-widest uppercase transition-all hover:translate-x-0.5 active:scale-95"
+                style={{ borderColor: "hsl(354 78% 44%)", background: "hsl(354 78% 96%)", color: "hsl(354 78% 44%)" }}
+              >
+                <span>⏹</span><span>STOP</span>
+              </button>
+            )}
+            {!isReading && (
+              <span className="font-mono text-xs text-muted-foreground italic">Press play to hear the diary read aloud.</span>
+            )}
+            {isReading && !isPaused && (
+              <span className="font-mono text-xs italic" style={{ color: accentColor }}>Reading diary aloud…</span>
+            )}
+            {isReading && isPaused && (
+              <span className="font-mono text-xs text-muted-foreground italic">Paused.</span>
+            )}
           </div>
 
           {/* Diary entry */}
