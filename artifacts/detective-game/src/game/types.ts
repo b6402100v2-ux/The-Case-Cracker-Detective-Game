@@ -128,9 +128,11 @@ When my phone vibrated against the wooden table, the sound was like a gunshot. M
     sfxColor: "hsl(210 80% 40%)",
     sfxTextColor: "white",
     panelColor: "comic-panel-cyan",
-    text: `Mrs. Harrison let me stay late in the studio today. She says I have a "rare eye for perspective." It's the only place in this building where the air doesn't feel like it's running out. Even Chloe and Sarah came by to drop off a coffee; they're the best friends anyone could ask for. We spent the afternoon laughing about our disastrous history presentation, and for a few hours, I felt like a normal sixteen-year-old. I'm surrounded by teachers who believe in me and friends who actually show up. I should be happy. I have every reason to be.
+    text: `Mr. Harrison let me stay late in the studio today. He says I have a "rare eye for perspective." It's the only place in this building where the air doesn't feel like it's running out. Even Chloe and Sarah came by to drop off a coffee; they're the best friends anyone could ask for. We spent the afternoon laughing about our disastrous history presentation, and for a few hours, I felt like a normal sixteen-year-old. I'm surrounded by teachers who believe in me and friends who actually show up.
 
-As they walked away, I saw them glance at their phones and then quickly at me. It was a split second, a tiny hitch in their laughter. I looked down at my canvas and realized I'd been painting the same recursive loop of thorns over and over. My phone buzzed in my pocket—a sharp, rhythmic pulse. It's a "ping" that follows me into every room, a digital footprint I can't scrub off. Even in this sanctuary, I can feel the unseen audience watching me through the lens, waiting for the next mistake.`,
+I should be happy. I have every reason to be. As they walked away, I saw them glance at their phones and then quickly at me. It was a split second, a tiny hitch in their laughter. I looked down at my canvas and realized I'd been painting the same recursive loop of thorns over and over.
+
+My phone buzzed in my pocket—a sharp, rhythmic pulse. It's a "ping" that follows me into every room, a digital footprint I can't scrub off. Even in this sanctuary, I can feel the unseen audience watching me through the lens, waiting for the girl in the "perfect" art room to finally break.`,
     questions: [
       {
         q: "What is the main idea of paragraph 1?",
@@ -141,7 +143,7 @@ As they walked away, I saw them glance at their phones and then quickly at me. I
           { key: "D", text: "The narrator wants to change schools." },
         ],
         ans: "B",
-        hint: "Re-read paragraph 1 — what does Mrs. Harrison say to Maya? What do Chloe and Sarah bring? How does Maya feel by the end of the paragraph?",
+        hint: "Re-read paragraph 1 — what does Mr. Harrison say to Maya? What do Chloe and Sarah bring? How does Maya feel by the end of the paragraph?",
       },
       {
         q: "What is the main idea of paragraph 2?",
@@ -198,11 +200,11 @@ As they walked away, I saw them glance at their phones and then quickly at me. I
     sfxColor: "hsl(48 100% 50%)",
     sfxTextColor: "hsl(0 0% 10%)",
     panelColor: "comic-panel-yellow",
-    text: `Leo took me to the pier tonight. The air was salty and cold, and he gave me his hoodie without me even asking. We sat on the edge of the wood, watching the black water churn underneath. He told me he's never met anyone as "real" as me. He makes me feel seen, truly seen, in a way that makes the rest of the world fade into the background. When he kissed me, I felt a flicker of hope—the idea that maybe his love could be a shield thick enough to stop the arrows.
+    text: `Leo took me to the pier tonight. The air was salty and cold, and he gave me his hoodie without me even asking. We sat on the edge of the wood, watching the black water churn underneath. He told me he's never met anyone as "real" as me. He makes me feel seen, truly seen, in a way that makes the rest of the world fade into the background.
 
-We took a selfie against the moonlight, but as he went to post it, I felt a wave of pure terror. "Don't tag me," I whispered, my voice shaking. He looked confused, his thumb hovering over the screen.
+When he kissed me, I felt a flicker of hope—the idea that maybe his love could be a shield thick enough to stop the arrows. We took a selfie against the moonlight, but as he went to post it, I felt a wave of pure terror. "Don't tag me," I whispered, my voice shaking. He looked confused, his thumb hovering over the screen.
 
-He doesn't know that every time my name is linked to a photo, the 'Comment' section turns into a slaughterhouse. He sees a beautiful memory; I see a new coordinate for them to find me. The "tether" is tightening, and even his arms around me can't stop the silent, digital scream waiting behind every notification.`,
+He doesn't know that every time my name is linked to a photo, the 'Comment' section turns into a slaughterhouse. He sees a beautiful memory; I see a new coordinate for them to find me. The "tether" is tightening, and even his arms around me can't stop the silent, digital scream waiting for me in the notifications I'm too scared to open.`,
     questions: [
       {
         q: "What is the main idea of paragraph 1?",
@@ -213,7 +215,7 @@ He doesn't know that every time my name is linked to a photo, the 'Comment' sect
           { key: "D", text: "The narrator is bored during the date." },
         ],
         ans: "B",
-        hint: "Re-read paragraph 1 — what does Leo give Maya? What does he say about her? How does she feel when he kisses her?",
+        hint: "Re-read paragraph 1 — what does Leo give Maya? What does he say about her? How does she describe the way he makes her feel?",
       },
       {
         q: "What is the main idea of paragraph 2?",
@@ -224,7 +226,7 @@ He doesn't know that every time my name is linked to a photo, the 'Comment' sect
           { key: "D", text: "The narrator ignores Leo during the date." },
         ],
         ans: "A",
-        hint: "Find 'We took a selfie... I felt a wave of pure terror.' What happens in this paragraph that turns a happy moment into fear?",
+        hint: "Re-read paragraph 2 — it starts with the kiss giving Maya hope, then something happens. What event in this paragraph suddenly turns that hope into terror?",
       },
       {
         q: "What is the main idea of paragraph 3?",
@@ -270,13 +272,11 @@ He doesn't know that every time my name is linked to a photo, the 'Comment' sect
     sfxColor: "hsl(354 78% 44%)",
     sfxTextColor: "white",
     panelColor: "comic-panel-pink",
-    text: `The "Countdown" is over. I finally looked.
-
-I thought I could keep the worlds separate. I thought if I had a good family, good friends, and a boy who loved me, the voices on the screen wouldn't matter. But they found the cracks. They took the photo from the pier. They took my art. They took the "bright spirit" Mom loves and turned it into something unrecognizable.
+    text: `The "Countdown" is over. I finally looked. I thought I could keep the worlds separate. I thought if I had a good family, good friends, and a boy who loved me, the voices on the screen wouldn't matter. But they found the cracks. They took the photo from the pier. They took my art. They took the "bright spirit" Mom loves and turned it into something unrecognizable.
 
 They've been voting on my life for weeks. A thousand people I don't know, and a few I thought I did, all hitting "like" on a thread that says I shouldn't exist. The "Burn Page" didn't just stay on the internet; it bled into the physical world. I saw the URL scratched into my locker, the same one I saw in the bathroom stall, the same one sent to my inbox a hundred times a day.
 
-I'm looking at the roast Mom made, the art Mrs. Harrison praised, and the hoodie Leo gave me. They are all beautiful things, but they aren't loud enough. The notifications are a rhythmic, digital heartbeat that has replaced my own. If I can't turn off the screen, I have to turn off the sound. I'm tired of being a spectacle. I just want to be still.`,
+I'm looking at the roast Mom made, the art Mr. Harrison praised, and the hoodie Leo gave me. They are all beautiful things, but they aren't loud enough. The notifications are a rhythmic, digital heartbeat that has replaced my own. I realize now that the "map" they drew leads to a place where the lights are always on and the shouting never stops. If I can't turn off the screen, I have to turn off the sound. I'm tired of being a spectacle. I just want to be still.`,
     questions: [
       {
         q: "What is the main idea of paragraph 1?",
